@@ -1,4 +1,4 @@
-# Day2（書きかけ）
+# Day2
 
 ## パターンマッチの初歩
 Day1でif式をやりましたが、パターンマッチを使うと条件分岐をよりスマートに書けることがあります。パターンマッチにはmatch式を使います。
@@ -647,4 +647,12 @@ f: (x: Shape)String
 
 * ループ処理は再帰で書ける。アキュムレータを導入することで末尾再帰に書き換えることができる
 * abstractをつけたケースクラスを継承することでパターンマッチに漏れがある場合にコンパイラが注意してくれる
+
+
+
+## 参考資料
+
+* [文字列の補間](http://docs.scala-lang.org/ja/overviews/core/string-interpolation.html)
+* [Scalaスケーラブルプログラミング第2版](http://www.amazon.co.jp/Scala%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%96%E3%83%AB%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E7%AC%AC2%E7%89%88-Martin-Odersky/dp/4844330845)
+* [すごいHaskellたのしく学ぼう!](http://www.amazon.co.jp/%E3%81%99%E3%81%94%E3%81%84Haskell%E3%81%9F%E3%81%AE%E3%81%97%E3%81%8F%E5%AD%A6%E3%81%BC%E3%81%86-Miran-Lipova%C4%8Da/dp/4274068854)
 
