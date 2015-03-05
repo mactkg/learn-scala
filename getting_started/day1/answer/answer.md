@@ -1,6 +1,6 @@
 # 問題1
 
-```
+```scala
 scala> for(x <- List(1,2,3);
      |     y <- List(10,100,1000))
      |   yield x * y
@@ -11,7 +11,7 @@ res0: List[Int] = List(10, 100, 1000, 20, 200, 2000, 30, 300, 3000)
 
 # 問題2
 
-```
+```scala
 scala> for(x <- List(1,2,3);
      |     y <- List(10, 100, 1000)
      |     if x * y > 50)
@@ -23,7 +23,7 @@ res1: List[Int] = List(100, 1000, 200, 2000, 300, 3000)
 
 # 問題3
 
-```
+```scala
 scala> for(x <- (2 to 100 by 2) if x % 7 == 3) yield x
 res2: scala.collection.immutable.IndexedSeq[Int] = Vector(10, 24, 38, 52, 66, 80, 94)
 ```
@@ -32,7 +32,7 @@ res2: scala.collection.immutable.IndexedSeq[Int] = Vector(10, 24, 38, 52, 66, 80
 
 # 問題4
 
-```
+```scala
 scala> for(s <- List("Apple", "Banana", "Pineapple", "Lemon")) yield s.substring(0, 1)
 res3: List[String] = List(A, B, P, L)
 ```
@@ -41,7 +41,7 @@ res3: List[String] = List(A, B, P, L)
 
 # 問題5
 
-```
+```scala
 scala> for(x <- 1 to 100) yield {
      |   if (x % 15 == 0) "FizzBuzz"
      |   else if (x % 5 == 0) "Buzz"
@@ -55,7 +55,7 @@ res4: scala.collection.immutable.IndexedSeq[String] = Vector(1, 2, Fizz, 4, Buzz
 
 # 問題6
 
-```
+```scala
 scala> List("a", "b", "c", "d", "e", "f", "g") zip List(1, 2, 3)
 res5: List[(String, Int)] = List((a,1), (b,2), (c,3))
 ```
@@ -68,14 +68,14 @@ res5: List[(String, Int)] = List((a,1), (b,2), (c,3))
 
 まずは三角形を3要素のタプルで表して、全ての組み合わせをつくってみる。
 
-```
+```scala
 scala> for(c <- 1 to 10; a <- 1 to 10; b <- 1 to 10) yield (a, b, c)
 res6: scala.collection.immutable.IndexedSeq[(Int, Int, Int)] = Vector((1,1,1), (1,2,1), (1,3,1), (1,4,1), (1,5,1), (1,6,1), (1,7,1), (1,8,1), (1,9,1), (1,10,1), (2,1,1), (2,2,1), (2,3,1), (2,4,1), (2,5,1), (2,6,1), (2,7,1), (2,8,1), (2,9,1), (2,10,1), (3,1,1), (3,2,1), (3,3,1), (3,4,1), (3,5,1), (3,6,1), (3,7,1), (3,8,1), (3,9,1), (3,10,1), (4,1,1), (4,2,1), (4,3,1), (4,4,1), (4,5,1), (4,6,1), (4,7,1), (4,8,1), (4,9,1), (4,10,1), (5,1,1), (5,2,1), (5,3,1), (5,4,1), (5,5,1), (5,6,1), (5,7,1), (5,8,1), (5,9,1), (5,10,1), (6,1,1), (6,2,1), (6,3,1), (6,4,1), (6,5,1), (6,6,1), (6,7,1), (6,8,1), (6,9,1), (6,10,1), (7,1,1), (7,2,1), (7,3,1), (7,4,1), (7,5,1), (7,6,1), (7,7,1), (7,8,1), (7,9,1), (7,10,1), (8,1,1), (8,2,1), (8,3,1), (8,4,1), (8,5,1), (8,6,1), (8,7,1), (8,8,1), (8,9,1), (8,10,1),...
 ```
 
 ピタゴラスの定理が成り立つタプルだけを抽出するためフィルタを追加。さらに、aはcより短く、bはaよりも短くなることを考慮する。
 
-```
+```scala
 scala> for(c <- 1 to 10;
      |     a <- 1 to c;
      |     b <- 1 to a;
@@ -86,7 +86,7 @@ res7: scala.collection.immutable.IndexedSeq[(Int, Int, Int)] = Vector((4,3,5), (
 
 周囲の長さが24になる条件を追加。
 
-```
+```scala
 scala> for(c <- 1 to 10;
      |     a <- 1 to c;
      |     b <- 1 to a;
