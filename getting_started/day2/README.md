@@ -65,7 +65,13 @@ scala> def head(xs: List[Int]): Int = xs match {
 
 パターンマッチはタプルにも使えます。条件分岐しつつタプルの要素を変数に束縛することもできます。
 
-例えば、3要素のタプルがあり、1つめの要素が動物の種類、2つ目の要素が名前、3つ目の要素が年齢だとします。そして、種別が犬（"doc"）の場合と猫（"cat"）の場合とそれ以外で処理を分けたいとき、こう書けます。
+例えば、3要素のタプルがあり、1つめの要素が動物の種類、2つ目の要素が名前、3つ目の要素が年齢だとします。
+
+```scala
+scala> val x = ("dog", "papico", 3)
+```
+
+そして、種別が犬（"doc"）の場合とクモ（"spider"）の場合とそれ以外で処理を分けたいとき、こう書けます。
 
 ```scala
 scala> def f(x: (String, String, Int)): String = x match {
@@ -75,7 +81,7 @@ scala> def f(x: (String, String, Int)): String = x match {
      | }
 f: (x: (String, String, Int))String
 
-scala> f(("dog", "papico", 3))
+scala> f(x)
 res0: String = I like dog! papico is 3 years old!
 
 scala> f(("spider", "papico", 3))
@@ -595,7 +601,7 @@ f: (x: Shape)String
    def binarySearch(xs: List[Int], x: Int): Boolean
    ```
    
-1. 2分探索木をつくってみましょう。
+1. 2分探索木をつくってみましょう。REPLの都合上、`object`というものでくるんであげる必要があります。これは次回やりますので深く考えず下のように2分探索木を定義してください。
    
    ```scala
    object Tree {
@@ -604,7 +610,9 @@ f: (x: Shape)String
      case class Node(a: Int, left: Tree, right: Tree) extend Tree
    }
    ```
-   2分探索木に値を追加するinsertメソッドをつくりましょう。
+   REPLから使う場合は、`scala> Tree.Empty()`というように使います。
+
+   2分探索木に値を追加するinsertメソッドをつくりましょう。insertメソッドを使うことで次のように2分探索木をつくることができます。`scala> Tree.Empty().insert(2).insert(5)`
    
    ```scala
    sealed abstract class Tree {
@@ -612,7 +620,7 @@ f: (x: Shape)String
    }
    ```
    
-1. 上でつくった2分探索木に、指定された値が含まれているかを探すメソッドをつくりましょう。
+1. 上でつくった2分探索木に、指定された値が含まれているかを探すメソッドをつくりましょう。例えば次のような場合はtrueが返ってくるはずです。`scala> Tree.Empty().insert(2).insert(5).contains(2)`
    
    ```scala
    sealed abstract case class Tree {
@@ -649,7 +657,10 @@ f: (x: Shape)String
 
 ## 要注意ポイント
 
-* ループ処理は再帰で書ける。アキュムレータを導入することで末尾再帰に書き換えることができる
+* パターンマッチで条件分岐しつつ変数束縛ができる
+* String interpolationを使うと文字列結合をスッキリ書ける
+* ループ処理を再帰で書くと`var`をなくせる
+* 再帰処理にアキュムレータを導入することで末尾再帰に書き換えることができる
 * `sealed`をつけた`abstract class`を継承することでパターンマッチに漏れがある場合にコンパイラが注意してくれる
 
 
