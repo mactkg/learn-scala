@@ -104,7 +104,7 @@ res6: String = I like dog! papico is 3 years old!papico like meet!
 
 
 ## String interpolation
-さっきのfメソッドですが、文字列結合の部分がちょっと面倒でしたよね。これはString interpolationと呼ばれる仕組みできれいに書けます。いわゆる数展開みたいに使えます。
+さっきのfメソッドですが、文字列結合の部分がちょっと面倒でしたよね。これはString interpolationと呼ばれる仕組みできれいに書けます。いわゆる変数展開みたいに使えます。
 
 ```scala
 scala> def f(x: (String, String, Int, List[String])): String = x match {
@@ -646,7 +646,7 @@ f: (x: Shape)String
 ## 要注意ポイント
 
 * ループ処理は再帰で書ける。アキュムレータを導入することで末尾再帰に書き換えることができる
-* abstractをつけたケースクラスを継承することでパターンマッチに漏れがある場合にコンパイラが注意してくれる
+* `sealed`をつけた`abstract class`を継承することでパターンマッチに漏れがある場合にコンパイラが注意してくれる
 
 
 
