@@ -343,7 +343,7 @@ REPLの出力が何やら分かりづらいですね。REPLの出力ではオブ
 ```scala
 // Rectangle.scala
 class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
-  def toString: String = s"Rectangle($x1, $y1, $x2, $y2)"
+  def toString = s"Rectangle($x1, $y1, $x2, $y2)"
 }
 ```
 
@@ -362,7 +362,7 @@ Loading Rectangle.scala...
 
 ```scala
 class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
-  override def toString: String = s"Rectangle($x1, $y1, $x2, $y2)"
+  override def toString = s"Rectangle($x1, $y1, $x2, $y2)"
 }
 ```
 
@@ -377,7 +377,7 @@ a: Rectangle = Rectangle(0.0, 0.0, 2.0, 3.0)
 
 ```scala
 class Rectangle(val x1: Double, val y1: Double, val x2: Double, val y2: Double) {
-  override def toString: String = s"Rectangle($x1, $y1, $x2, $y2)"
+  override def toString = s"Rectangle($x1, $y1, $x2, $y2)"
 }
 ```
 
@@ -426,13 +426,13 @@ abstract class Shape {
 }
 
 class Rectangle(val x1: Double, val y1: Double, val x2: Double, val y2: Double) extends Shape {
-  override def toString: String = s"Rectangle($x1, $y1, $x2, $y2)"
-  override def area: Double = math.abs(x2 - x1) * math.abs(y2 - y1)
+  override def toString = s"Rectangle($x1, $y1, $x2, $y2)"
+  override def area = math.abs(x2 - x1) * math.abs(y2 - y1)
 }
 
 class Circle(val x: Double, val y: Double, val r: Double) extends Shape {
-  override def toString: String = s"Circle($x, $y, $r)"
-  override def area: Double = r * r * math.Pi
+  override def toString = s"Circle($x, $y, $r)"
+  override def area = r * r * math.Pi
 }
 ```
 
