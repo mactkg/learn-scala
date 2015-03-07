@@ -701,12 +701,15 @@ abstract class Shape {
 
 * match式、パターンマッチ
 * String interpolation
+* `var`
 * 再帰
 * 末尾再帰
 * アキュムレータ（蓄積変数）
-* private修飾子
+* `private`修飾子
+* 引数のデフォルト値
 * クラス
-* abstract、extends
+* `override`
+* `abstract`、`extends`
 * ケースクラス
 * シングルトンオブジェクト、コンパニオンオブジェクト
 
@@ -717,9 +720,12 @@ abstract class Shape {
 * String interpolationを使うと文字列結合をスッキリ書ける
 * ループ処理を再帰で書くと`var`をなくせる
 * 再帰処理にアキュムレータを導入することで末尾再帰に書き換えることができる
+* 末尾再帰はコンパイル時にループ処理に置き換えられる
+* 継承元のクラスが実装してるメソッドをオーバーライドするときは`override`をつける
 * クラスよりケースクラスの方がかなり便利である
 * `sealed`をつけた`abstract class`を継承することでパターンマッチに漏れがある場合にコンパイラが注意してくれる
 * `List(1,2,3,4,5)`というのは、Listシングルトンオブジェクトのapplyメソッドを呼び出している
+* REPLで:loadだと1行ずつ読み込まれる、:pasteだとファイル単位で読み込まれる
 
 
 
