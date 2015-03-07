@@ -568,12 +568,41 @@ f: (x: Shape)String
 
 クラス以外にも型をつくる方法はいろいろありますが、そのうちの1つがシングルトンオブジェクトです。これはその名の通りシングルトンオブジェクトをつくります。インスタンス化する、というような考え方はないです。定義したらそれが型でありオブジェクトになります。
 
+シングルトンオブジェクトは、`object`を使って定義します。
+
 ```scala
 object OriginPoint {
   val x = 0.0
   val y = 0.0
 }
 ```
+
+シングルトンオブジェクトは、コンパニオンオブジェクトとして使われることが多いです。コンパニオンオブジェクトとはなんでしょうか？
+
+今までリストをつくるときに、`List(1,2,3,4,5)`というように書いていました。この書き方はなんでしょうか？これは`apply`メソッドが省略されていて、省略せずに書くと`List.apply(1,2,3,4,5)`となります。Listはケースクラスではないです。Listという名前は、クラスとシングルトンオブジェクト、両方で定義されています。そして、`List(1,2,3,4,5)`というのは、シングルトンオブジェクトのapplyメソッドを呼び出していることになります。
+
+Listがクラスとしても定義されているなら、`List(1,2,3,4,5)`ではなく、`new List(1,2,3,4,5)`というように書けないのでしょうか？書けません。なぜなら、Listのコンストラクタは`private`になっているためです。なので、`List(1,2,3,4,5)`というようにリストを作ります。ListオブジェクトからはListクラスの`private`なコンストラクタが呼び出せるということになります。クラスと同じファイル内で、同名のシングルトンオブジェクトを定義すると、それはコンパニオンオブジェクトとなります。コンパニオンオブジェクトは同名のクラスの`private`なメソッドにアクセスすることができるのです。
+
+```scala
+class Hoge private (x: Int)
+object Hoge {
+  def apply(x: Int): Hoge = new Hoge(x)
+}
+```
+
+これをREPLに読み込んでみましょう。ここで注意が必要です。:loadでファイルを読み込むとファイル単位ではなく1行ずつ評価するため、`object Hoge`がコンパニオンオブジェクトとして認識されません。ファイル全体を一度にREPLに評価してほしいときは、:loadではなく:pasteを使いましょう。
+
+```scala
+scala> new Hoge(1)
+<console>:10: error: constructor Hoge in class Hoge cannot be accessed in object $iw
+              new Hoge(1)
+              ^
+
+scala> Hoge(1)
+res1: Hoge = Hoge@59f95c5d
+```
+
+`List(1,2,3,4,5)`というのは、Listクラスのコンパニオンオブジェクトのapplyメソッドを呼び出していた、ということが分かりました。
 
 
 
@@ -588,18 +617,16 @@ object OriginPoint {
    def binarySearch(xs: List[Int], x: Int): Boolean
    ```
    
-1. 2分探索木をつくってみましょう。REPLの都合上、`object`というものでくるんであげる必要があります。これは次回やりますので深く考えず下のように2分探索木を定義してください。
+1. 2分探索木をつくってみましょう。REPLに読み込むときは、:loadではなく:pasteで読み込んでください（:loadだとこの後の問題を解いてるとどこかでエラーになります。エラーになることを試してみてもいいかもしれません）。
    
    ```scala
-   object Tree {
-     sealed abstract class Tree
-     case class Empty() extend Tree
-     case class Node(a: Int, left: Tree, right: Tree) extend Tree
-   }
+   sealed abstract class Tree
+   case class Empty() extend Tree
+   case class Node(a: Int, left: Tree, right: Tree) extend Tree
    ```
-   REPLから使う場合は、`scala> Tree.Empty()`というように使います。
-
-   2分探索木に値を追加するinsertメソッドをつくりましょう。insertメソッドを使うことで次のように2分探索木をつくることができます。`scala> Tree.Empty().insert(2).insert(5)`
+   REPLから使う場合は、`scala> Empty()`というように使います。
+   
+   2分探索木に値を追加するinsertメソッドをつくりましょう。insertメソッドを使うことで次のように2分探索木をつくることができます。`scala> Empty().insert(2).insert(5)`
    
    ```scala
    sealed abstract class Tree {
@@ -607,7 +634,7 @@ object OriginPoint {
    }
    ```
    
-1. 上でつくった2分探索木に、指定された値が含まれているかを探すメソッドをつくりましょう。例えば次のような場合はtrueが返ってくるはずです。`scala> Tree.Empty().insert(2).insert(5).contains(2)`
+1. 上でつくった2分探索木に、指定された値が含まれているかを探すメソッドをつくりましょう。例えば次のような場合はtrueが返ってくるはずです。`scala> Empty().insert(2).insert(5).contains(2)`
    
    ```scala
    sealed abstract case class Tree {
@@ -635,11 +662,10 @@ object OriginPoint {
 * 末尾再帰
 * アキュムレータ（蓄積変数）
 * private修飾子
-* 関数
-* 関数リテラル
-* 高階メソッド
-* ケースクラス
+* クラス
 * abstract、extends
+* ケースクラス
+* シングルトンオブジェクト、コンパニオンオブジェクト
 
 
 ## 要注意ポイント
@@ -648,7 +674,9 @@ object OriginPoint {
 * String interpolationを使うと文字列結合をスッキリ書ける
 * ループ処理を再帰で書くと`var`をなくせる
 * 再帰処理にアキュムレータを導入することで末尾再帰に書き換えることができる
+* クラスよりケースクラスの方がかなり便利である
 * `sealed`をつけた`abstract class`を継承することでパターンマッチに漏れがある場合にコンパイラが注意してくれる
+* `List(1,2,3,4,5)`というのは、Listクラスのコンパニオンオブジェクトのapplyメソッドを呼び出している
 
 
 
