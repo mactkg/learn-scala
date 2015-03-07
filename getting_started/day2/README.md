@@ -308,175 +308,98 @@ def maximum(xs: List[Int]): Int = {
 
 
 
-## 関数
-これまでに色々なメソッドを使ってきました。メソッドは何かしらのオブジェクトに属するもので単独では存在することができません（REPL上は例外です）。
-
-Scalaではメソッドと似ていますが、オブジェクトに属さずに単独で存在できる関数があります。Scalaにおいて関数はファーストクラスオブジェクトです。ファーストクラスであるとは、オブジェクトに属さずにそれ単独で値のように扱えるというようなことです。値のように扱えるので、変数に代入したり、他のメソッドの引数に関数を渡したり、リストに複数の関数を格納したり、ということができます。
-
-では関数をつくってみましょう。関数をつくために関数リテラルが用意されています。
-
-```scala
-scala> val f = (x: Int) => x * 2
-f: Int => Int = <function1>
-```
-
-引数として1つのIntオブジェクトを受け取り、2倍にして返す関数です。その関数を変数`f`に代入しています。
-REPLの出力を見てみましょう。`f: Int => Int = <function1>`というのは、「fという変数は Int => Int 型で、値は <function1> です」という意味になります。Int => Int 型というのは、引数として1つのIntをとり返り値がIntである関数を表します。値の <function1> というのは関数本体を書きたいところだけど書くと長くなっちゃうので<function1>と書いて値が関数であることを示してるんだと解釈してます。
-
-では、fを使ってみましょう。関数にある適当な数値を渡してみましょう。関数fに数値10を適用する、と言うこともできます。
-
-```scala
-scala> f(10)
-res1: Int = 20
-```
-
-関数を定義し、関数で定義した処理を実行することができました。
-
-
-
-## コレクションの高階メソッド
-関数がファーストクラスオブジェクトであることは分かりました。では関数は何に役立つのでしょうか？
-
-役立つシーンの1つに関数を受け取るメソッドがあります。関数を受け取るメソッドを高階メソッドと呼びます。高階メソッドの中でもコレクションが持つ高階メソッドはよく使うことになるでしょう。
-
-コレクションの高階メソッドの1つ、foreachメソッドを使ってみます。引数で受け取った関数にコレクションそれぞれの要素を適用します。
-
-```scala
-scala> val cs = ('A' to 'Z')
-scala> cs.foreach((c: Char) => println("Hello, " + c))
-```
-
-csがCharのコレクションなので、関数の引数であるcがCharであることはScalaが推論できます。なので、cの型は省略できます。
-
-```scala
-scala> cs.foreach((c) => println("Hello, " + c))
-```
-
-関数の引数が1つの場合は`()`も省略できます。
-
-```scala
-scala> cs.foreach(c => println("Hello, " + c))
-```
-
-さらに、引数を1回しか使っていない場合はもっと短く書くことができます。`c => println("Hello, " + c)` が `_ => println("Hello, " + _)` になって、さらに `println("Hello, " + _)` になる、といったイメージです。
-
-```scala
-scala> cs.foreach(println("Hello, " + _))
-```
-
-だいぶすっきりしますね。
-
-次は、mapメソッドを使ってみます。mapメソッドは、引数で受け取った関数にコレクションそれぞれの要素を適用した結果からなる新たなコレクションを作ります。
-
-```scala
-scala> val xs = (1 to 10)
-scala> xs.map((x: Int) => x * 2)
-```
-
-このmapメソッド。あるコレクションを別のコレクションに変換します。これってどこかで聞き覚えないですか？そうです、前回やったfor式ですね。上のmapを使った例はfor式でも書けますね。
-
-```scala
-scala> for(x <- xs) yield x * 2
-```
-
-どちらを使っても同じことができます。どちらを使うべきかというのは現時点では特にないので読みやすいを使えばいいかと思います。
-
-foreach、 mapの他に、filterという高階メソッドがあります。filterにはBooleanを返す関数を渡すことができます。Booleanを返す関数のことを「述語」と呼んだりします。述語関数に各要素を適用した結果がtrueになる要素のみからなるコレクションを取得できます。
-
-```scala
-scala> xs.filter((x: Int) => x > 6)
-scala> xs.filter(x => x > 6)
-scala> xs.filter(_ > 6)
-```
-
-mapとfilterを組み合わせてみます。filterの後ろに続くのがmapかforeachの場合はfilterより高速に動作するwithFilterが使えます。
-
-```scala
-scala> xs.filter(_ > 6).map(_ * 2)
-scala> xs.withFilter(_ > 6).map(_ * 2)
-```
-
-このfilter、withFilterもfor式で同じことができますね。for式ではifを使ってフィルタできるのでした。
-
-```scala
-scala> for(x <- xs; if x > 6) yield x * 2
-```
-
-もう1つ、flatMapメソッドを見てみましょう。flatMapはmapと同じように値変換するような感じなのですが、ちょっと違います。flatMapに渡す変換のための関数ではコレクションを返す必要があるのです。flatMapはコレクションを返す関数に各要素を適用した結果、複数のコレクションが手に入るのでそれらを結合します。
-
-```scala
-scala> List(1,2,3,4).flatMap((a: Int) => 1 to a)
-scala> List(1,2,3,4).flatMap(a => 1 to a)
-scala> List(1,2,3,4).flatMap(1 to _)
-```
-
-このflatMapもfor式と関わりがあります。ジェネレータを複数回続けた場合と同じことになります。2つのコレクションをfor式の2つのジェネレータに書くと、各要素を組み合わせた処理を書けました。
-
-例えば前回の練習問題で三角形を3要素のタプルで表現するのがありました。for式、flatMap、両方を使った場合はこうなります。
-
-```scala
-scala> for(c <- 1 to 10; a <- 1 to c; b <- 1 to a) yield (a,b,c)
-scala> (1 to 10).flatMap(c => (1 to c).flatMap(a => (1 to a).map(b => (a,b,c))))
-```
-
-直角三角形だけを抽出したい場合はこうなります。
-
-```scala
-scala> for(c <- 1 to 10; a <- 1 to c; b <- 1 to a; if c*c == a*a + b*b) yield (a,b,c)
-scala> (1 to 10).flatMap(c => (1 to c).flatMap(a => (1 to a).withFilter(b => c*c == a*a + b*b).map(b => (a,b,c))))
-```
-
-うーん、これはfor式を使った方が見やすい気がしますね。
-
-他にもいろいろな高階メソッドがありますが、今日のところはここまでにして次に進みます。
-
-
-
-## ケースクラス
+## クラス
 
 以前、2次元ベクトルを表すのにタプルを使いました。長方形を表すにはどうしたらいいでしょうか？Intを4つ持つタプルを使うのもいいですが、自分で長方形を表す型を定義してしまう方がより良いでしょう。
 
-自分で型をつくってみましょう。型を定義する方法はいくつかありますが、ケースクラスを使うのが一番楽です。ケースクラスを定義するときは`case class`というキーワードを使います。`case class`の後にケースクラスの名前、コンストラクタ引数が続きます。
+自分で型をつくってみましょう。型を定義する方法はいくつかありますが、クラスを使う方法を見ていきます。
+
+まず、クラスを定義するときは`class`を使います。インスタンス化するときは`new`を使います。
 
 ```scala
-case class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double)
+scala> class Rectangle
+scala> val x = new Rectangle
 ```
 
-これでRectangle型を定義できました。使ってみましょう。ケースクラスをインスタンス化して、Rectangle型のオブジェクトを手に入れるには`apply`メソッドを呼び出します。`apply`メソッドは省略できるんでしたね。
+Rectangleをいろいろいじっていくので、Shape.scalaに書いて使うときはREPLにロードして使いましょう。
+
+長方形を左下の座標と右上の座標で表すことにします。コンストラクタで指定できるようにしましょう。コンストラクタの引数は、クラス名の右側に書きます。
 
 ```scala
-scala> :load Shape.scala
-scala> val rec = Rectangle.apply(1, 2, 5, 6)
-scala> val rec = Rectangle(1, 2, 5, 6)
-rec: Rectangle = Rectangle(1, 2, 5, 6)
+// Rectangle.scala
+class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double)
 ```
 
-ケースクラスでは、コンストラクタのパラメータへアクセスできます。ケースクラスはイミュータブルなのでコンストラクタのパラメータを書き換えることはできません。また、`toString`メソッドが自動で生成され呼び出すと各パラメータの値を出力できます。
+使ってみましょう。
 
 ```scala
-scala> rec.x1
-res1: Double = 1.0
-
-scala> print(rec)
-Rectangle(1, 2, 5, 6)
+scala> :load Rectangle.scala
+scala> val a = new Rectangle(0,0,2,3)
+a: Rectangle = Rectangle@7cef4e59
 ```
 
-ケースクラスからつくったオブジェクトは、各パラメータを使って等しいかどうかの比較もできます。
+REPLの出力が何やら分かりづらいですね。REPLの出力ではオブジェクトのtoStringメソッドが呼ばれます。なので、RectangleにもtoStringメソッドを追加しましょう。
 
 ```scala
-scala> rec == Rectangle(1, 2, 5, 6)
-scala> rec == Rectangle(3, 2, 5, 6)
+// Rectangle.scala
+class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
+  def toString: String = s"Rectangle($x1, $y1, $x2, $y2)"
+}
+```
+
+REPLに読み込んでみましょう。
+
+```
+scala> :load Rectangle.scala
+Loading Rectangle.scala...
+<console>:8: error: overriding method toString in class Object of type ()String;
+ method toString needs `override' modifier
+         def toString: String = s"Rectangle($x1, $y1, $x2, $y2)"
+             ^
+```
+
+エラーになってしまいました。"method toString needs override modifier" と表示されています。ScalaではすべてのクラスはAnyクラスを継承しています。そしてAnyクラスでtoStringが定義されているため、RectangleクラスでtoStringを定義するとオーバーライドすることになります。Scalaではオーバーライドするときは`override`をdefに左側に書く必要があります。
+
+```scala
+class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
+  override def toString: String = s"Rectangle($x1, $y1, $x2, $y2)"
+}
+```
+
+これで無事読み込むことができます。REPLの出力も分かりやすくなりました。
+
+```scala
+scala> val a = new Rectangle(0,0,2,3)
+a: Rectangle = Rectangle(0.0, 0.0, 2.0, 3.0)
+```
+
+コンストラクタのパラメータに`val`、もしくは、`var`をつけることで、外部からパラメータにアクセスできるようになります。理由がない限り公開しなくていいでしょう。また公開するにしても`var`ではなく`val`にしましょう。`var`にしてしまうとオブジェクトがミュータブルになってしまい扱いづらくなります。
+
+```scala
+class Rectangle(val x1: Double, val y1: Double, val x2: Double, val y2: Double) {
+  override def toString: String = s"Rectangle($x1, $y1, $x2, $y2)"
+}
+```
+
+外部からコンストラクタパラメータにアクセスする場合は、`.`の後にパラメータ名を指定するだけです。以下の例の場合は`x1`という名前のメソッドを呼び出して、パラメータ`x1`の値にアクセスできます。
+
+```scala
+scala> val a = new Rectangle(0,0,2,3)
+a: Rectangle = Rectangle(0.0, 0.0, 2.0, 3.0)
+
+scala> a.x1
+res6: Double = 0.0
 ```
 
 面積を求めるメソッドを追加してみましょう。副作用のないメソッドなのでメソッド定義時に`()`はつけない方がいいでしょう。
 
 ```scala
-case class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
+class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
   def area: Double = math.abs(x2 - x1) * math.abs(y2 - y1)
 }
 ```
 
-自分でつくった型のリストをつくったりももちろんできます。Rectangleのリストを受け取って面積の合計を返すメソッドをつくって試してみましょう。
+Rectangleという型を自分でつくることができました。自分でつくった型のリストをつくったりももちろんできます。Rectangleのリストを受け取って面積の合計を返すメソッドをつくって試してみましょう。
 
 ```scala
 scala> def sumArea(xs: List[Rectangle]): Double = {
@@ -490,9 +413,59 @@ scala> val xs = List(Rectangle(0, 0, 2, 2), Rectangle(0, 0, 3, 3), Rectangle(0, 
 scala> sumArea(xs)
 ```
 
+
+
+## 継承
 さて、長方形だけでなく円もつくりたくなりました。しかも`sumArea`メソッドでは長方形と円と両方を受け取って面積の合計を返したいです。こういう場合は、長方形と円を抽象化して図形として扱えるようにすればいいです。JavaやRubyでも継承ってものがありますが、Scalaにもあります。
 
 抽象化して抽出された図形という型はインスタンス化することはないので、`abstract`というキーワードを`class`の前につけます。図形をShapeという型で表すことにします。Shape型に属するケースクラスを定義するときは`extends`キーワードを使います。
+
+```scala
+abstract class Shape {
+  def area: Double
+}
+
+class Rectangle(val x1: Double, val y1: Double, val x2: Double, val y2: Double) extends Shape {
+  override def toString: String = s"Rectangle($x1, $y1, $x2, $y2)"
+  override def area: Double = math.abs(x2 - x1) * math.abs(y2 - y1)
+}
+
+class Circle(val x: Double, val y: Double, val r: Double) extends Shape {
+  override def toString: String = s"Circle($x, $y, $r)"
+  override def area: Double = r * r * math.Pi
+}
+```
+
+Rectangleは先ほどと同じように、CircleもRectangleと同じように使えます。
+
+```scala
+scala> val rec = new Rectangle(0, 0, 2, 2)
+scala> val circle = new Circle(2, 4, 3)
+scala> circle.x
+scala> circle.r
+```
+
+両方をShapeとして扱うこともできます。
+
+```scala
+scala> def sumArea(xs: List[Shape]): Double = {
+     |   def loop(xs: List[Shape], acc: Double): Double = xs match {
+     |     case Nil => acc
+     |     case x :: tail => loop(tail, x.area + acc)
+     |   }
+     |   loop(xs, 0)
+     | }
+scala> val xs = List(rec, circle, Rectangle(0, 0, 2, 4))
+scala> sumArea(xs)
+```
+
+
+
+## ケースクラス
+
+クラスを使って長方形や円を表す型をつくってみました。クラスを使わずにケースクラスというものを使って型をつくることもできます。しかも、ケースクラスを使った場合は、toStringや==メソッドなどを自動でつくってくれます。さらに、パターンマッチで使うこともできます。
+
+ケースクラスを使うには、`class`と書いたところを`case class`にするだけです。toStringなども削除してしまいましょう。あとはコンストラクタ引数の`val`も不要です。
 
 ```scala
 abstract class Shape {
@@ -508,30 +481,26 @@ case class Circle(x: Double, y: Double, r: Double) extends Shape {
 }
 ```
 
-Rectangleは先ほどと同じように、CircleもRectangleと同じように使えます。
+使ってみましょう。ケースクラスをインスタンス化して、Rectangle型のオブジェクトを手に入れるには`new`を使うのではなく、`apply`メソッドを呼び出します。`apply`メソッドは省略できるんでしたね。
 
 ```scala
-scala> val rec = Rectangle(0, 0, 2, 2)
-scala> val circle = Circle(2, 4, 3)
-scala> circle.x
-scala> circle.r
-```
+scala> :load Shape.scala
+scala> val rec = Rectangle.apply(1, 2, 5, 6)
+scala> val rec = Rectangle(1, 2, 5, 6)
+rec: Rectangle = Rectangle(1, 2, 5, 6)
 
-両方をShapeとして扱うこともできます。
+scala> rec.x1
+res1: Double = 1.0
 
-```scala
-scala> def sumArea(xs: List[Rectangle]): Double = {
-     |   def loop(xs: List[Rectangle], acc: Double): Double = xs match {
-     |     case Nil => acc
-     |     case x :: tail => loop(tail, x.area + acc)
-     |   }
-     |   loop(xs, 0)
-     | }
+scala> rec == Rectangle(1, 2, 5, 6)
+scala> rec == Rectangle(3, 2, 5, 6)
+
+scala> val circle = new Circle(2, 4, 3)
 scala> val xs = List(rec, circle, Rectangle(0, 0, 2, 4))
 scala> sumArea(xs)
 ```
 
-ケースクラスもパターンマッチできます。条件分岐しつつ変数束縛するってやつです。
+ケースクラスはパターンマッチできます。条件分岐しつつ変数束縛するってやつです。
 
 ```scala
 scala> def f(x: Shape): String = x match {
@@ -539,6 +508,9 @@ scala> def f(x: Shape): String = x match {
      |   case _: Circle           => "this is circle."
      |   case _: Rectangle        => "this is rectangle."
      | }
+scala> f(rec)
+scala> f(circle)
+scala> f(Circle(0,0,5))
 ```
 
 ケースクラスの場合だけに限った話ではないですが、パターンマッチするときはパターンに漏れがないようにすることが大事です。これは結構大変なことです。例えば三角形を追加した場合、Shapeでmatch式している箇所全体が影響してしまいます。
@@ -587,6 +559,21 @@ f: (x: Shape)String
 ```
 
 コンパイラが警告を出してくれます。これは非常に助かります。ケースクラスが継承する`abstract class`には基本的に`sealed`をつけた方がいいでしょう。
+
+ケースクラスはクラスと比べて非常に便利です。データを表すようなクラスを作る場合は基本的にケースクラスを使うといいです。
+
+
+
+## シングルトンオブジェクト
+
+クラス以外にも型をつくる方法はいろいろありますが、そのうちの1つがシングルトンオブジェクトです。これはその名の通りシングルトンオブジェクトをつくります。インスタンス化する、というような考え方はないです。定義したらそれが型でありオブジェクトになります。
+
+```scala
+object OriginPoint {
+  val x = 0.0
+  val y = 0.0
+}
+```
 
 
 
