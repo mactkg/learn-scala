@@ -369,11 +369,12 @@ class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
 これで無事読み込むことができます。REPLの出力も分かりやすくなりました。
 
 ```scala
+scala> :load Rectangle.scala
 scala> val a = new Rectangle(0,0,2,3)
 a: Rectangle = Rectangle(0.0, 0.0, 2.0, 3.0)
 ```
 
-コンストラクタのパラメータに`val`、もしくは、`var`をつけることで、外部からパラメータにアクセスできるようになります。理由がない限り公開しなくていいでしょう。また公開するにしても`var`ではなく`val`にしましょう。`var`にしてしまうとオブジェクトがミュータブルになってしまい扱いづらくなります。
+コンストラクタのパラメータに`val`、もしくは、`var`をつけることで、外部からパラメータにアクセスできるようになります。理由がない限り`var`ではなく`val`にしましょう。`var`にしてしまうとオブジェクトがミュータブルになってしまい扱いづらくなります。
 
 ```scala
 class Rectangle(val x1: Double, val y1: Double, val x2: Double, val y2: Double) {
@@ -465,7 +466,7 @@ scala> sumArea(xs)
 
 クラスを使って長方形や円を表す型をつくってみました。クラスを使わずにケースクラスというものを使って型をつくることもできます。しかも、ケースクラスを使った場合は、toStringや==メソッドなどを自動でつくってくれます。さらに、パターンマッチで使うこともできます。
 
-ケースクラスを使うには、`class`と書いたところを`case class`にするだけです。toStringなども削除してしまいましょう。あとはコンストラクタ引数の`val`も不要です。
+ケースクラスを使うには、`class`と書いたところを`case class`にするだけです。toStringも削除してしまいましょう。あとはコンストラクタ引数の`val`も不要です。
 
 ```scala
 abstract class Shape {
@@ -487,14 +488,9 @@ case class Circle(x: Double, y: Double, r: Double) extends Shape {
 scala> :load Shape.scala
 scala> val rec = Rectangle.apply(1, 2, 5, 6)
 scala> val rec = Rectangle(1, 2, 5, 6)
-rec: Rectangle = Rectangle(1, 2, 5, 6)
-
 scala> rec.x1
-res1: Double = 1.0
-
 scala> rec == Rectangle(1, 2, 5, 6)
 scala> rec == Rectangle(3, 2, 5, 6)
-
 scala> val circle = new Circle(2, 4, 3)
 scala> val xs = List(rec, circle, Rectangle(0, 0, 2, 4))
 scala> sumArea(xs)
@@ -581,9 +577,10 @@ object OriginPoint {
 
 今までリストをつくるときに、`List(1,2,3,4,5)`というように書いていました。この書き方はなんでしょうか？これは`apply`メソッドが省略されていて、省略せずに書くと`List.apply(1,2,3,4,5)`となります。Listはケースクラスではないです。Listという名前は、クラスとシングルトンオブジェクト、両方で定義されています。そして、`List(1,2,3,4,5)`というのは、シングルトンオブジェクトのapplyメソッドを呼び出していることになります。
 
-Listがクラスとしても定義されているなら、`List(1,2,3,4,5)`ではなく、`new List(1,2,3,4,5)`というように書けないのでしょうか？書けません。なぜなら、Listのコンストラクタは`private`になっているためです。なので、`List(1,2,3,4,5)`というようにリストを作ります。ListオブジェクトからはListクラスの`private`なコンストラクタが呼び出せるということになります。クラスと同じファイル内で、同名のシングルトンオブジェクトを定義すると、それはコンパニオンオブジェクトとなります。コンパニオンオブジェクトは同名のクラスの`private`なメソッドにアクセスすることができるのです。
+Listがクラスとしても定義されているなら、`List(1,2,3,4,5)`ではなく、`new List(1,2,3,4,5)`というように書けないのでしょうか？書けません。なぜなら、Listのコンストラクタは`private`になっているためです。しかし、`List.apply(1,2,3,4,5)`でリストを生成できているので、ListシングルトンオブジェクトからはListクラスの`private`なコンストラクタが呼び出せるということになります。クラスと同じファイル内で、同名のシングルトンオブジェクトを定義すると、それはコンパニオンオブジェクトとなります。コンパニオンオブジェクトは同名のクラスの`private`なメソッドにアクセスすることができるのです。
 
 ```scala
+// Hoge.scala
 class Hoge private (x: Int)
 object Hoge {
   def apply(x: Int): Hoge = new Hoge(x)
@@ -593,6 +590,7 @@ object Hoge {
 これをREPLに読み込んでみましょう。ここで注意が必要です。:loadでファイルを読み込むとファイル単位ではなく1行ずつ評価するため、`object Hoge`がコンパニオンオブジェクトとして認識されません。ファイル全体を一度にREPLに評価してほしいときは、:loadではなく:pasteを使いましょう。
 
 ```scala
+scala> :paste Hoge.scala
 scala> new Hoge(1)
 <console>:10: error: constructor Hoge in class Hoge cannot be accessed in object $iw
               new Hoge(1)
@@ -603,6 +601,42 @@ res1: Hoge = Hoge@59f95c5d
 ```
 
 `List(1,2,3,4,5)`というのは、Listクラスのコンパニオンオブジェクトのapplyメソッドを呼び出していた、ということが分かりました。
+
+
+
+## this
+
+図形の面積を比較するメソッドを追加してみましょう。これはどの図形でも同じ処理になるので、Shapeクラスに実装できそうです。
+
+```scala
+abstract class Shape {
+  def area: Double
+  def lessThan(a: Shape): Boolean = area < a.area
+}
+```
+
+使ってみましょう。
+
+```scala
+scala> Rectangle(0,0,1,2).lessThan(Rectangle(0,0,3,8))
+res7: Boolean = true
+
+scala> Rectangle(0,0,3,8).lessThan(Rectangle(0,0,1,2))
+res8: Boolean = false
+
+scala> Rectangle(0,0,1,2).lessThan(Circle(0,0,3))
+res9: Boolean = true
+```
+
+良さそうですね。では、次に、面積の大きい方のオブジェクトを返すmaxメソッドを定義しましょう。先ほどつくったlessThanメソッドを使って引数で指定された図形の方が大きければ引数で指定されたオブジェクトを、そうでなければ自分自身を返します。自分自身を表すオブジェクトが必要なときは、`this`を使います。
+
+```scala
+abstract class Shape {
+  def area: Double
+  def lessThan(a: Shape): Boolean = area < a.area
+  def max(a: Shape): Shape = if (lessThan(a)) a else this
+}
+```
 
 
 
