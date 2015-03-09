@@ -552,7 +552,34 @@ scala> Some("ABC").exits(_ == "AAA")
 
 ## Map
 
-連想配列として使えるMapも型コンストラクタです。これは型パラメータを2つ受け取る型コンストラクタです。
+連想配列として使えるMapも型コンストラクタです。これは型パラメータを2つ受け取る型コンストラクタです。キーの型と値の型の２種類です。使ってみましょう。
+
+```scala
+scala> val m = Map[String, Int](("key1", 1), ("key2", 2))
+scala> val m = Map(("key1", 1), ("key2", 2))
+scala> val m = Map("key1" -> 1, "key2" -> 2)
+m: scala.collection.immutable.Map[String,Int] = Map(key1 -> 1, key2 -> 2)
+
+scala> m.get("key1")
+res94: Option[Int] = Some(1)
+
+scala> m.get("hogehoge")
+res95: Option[Int] = None
+```
+
+MapシングルトンオブジェクトのapplyメソッドでMapのインスタンスをつくっています。引数にはキーと値をタプルで渡してます。メソッド呼び出し時の型パラメータは省略可能でした。Mapのインスタンスをつくるときは`Map(("key1", 1), ("key2", 2))`ではなく`Map("key1" -> 1, "key2" -> 2)`という風に書くことが多いです。この書き方については後で説明します。
+
+Mapから値を取り出すにはgetメソッドを使いますが、getメソッドの返り値はOptionです。指定したキーが存在しない場合はNoneが返ります。
+
+一度つくったマップに要素を追加してみましょう。追加は+メソッドです。Mapもイミュータブルであるため、要素が追加されたMapをつくるだけで、元々のMapに変更はありません。
+
+```scala
+scala> m + ("key3" -> 3)
+res96: scala.collection.immutable.Map[String,Int] = Map(key1 -> 1, key2 -> 2, key3 -> 3)
+
+scala> m
+res97: scala.collection.immutable.Map[String,Int] = Map(key1 -> 1, key2 -> 2)
+```
 
 
 
