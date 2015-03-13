@@ -79,7 +79,7 @@ scala> def head(xs: List[Int]): Int = xs match {
 例えば、3要素のタプルがあり、1つめの要素が動物の種類、2つ目の要素が名前、3つ目の要素が年齢だとします。
 
 ```scala
-scala> val x = ("dog", "papico", 3)
+scala> val a = ("dog", "papico", 3)
 ```
 
 そして、種別が犬（"doc"）の場合とクモ（"spider"）の場合とそれ以外で処理を分けたいとき、こう書けます。
@@ -92,7 +92,7 @@ scala> def f(x: (String, String, Int)): String = x match {
      | }
 f: (x: (String, String, Int))String
 
-scala> f(x)
+scala> f(a)
 res0: String = I like dog! papico is 3 years old!
 
 scala> f(("spider", "papico", 3))
@@ -215,7 +215,7 @@ def contains(x: Int, xs: List[Int]): Boolean = xs match {
 }
 ```
 
-クイックソードのアルゴリズムを書いてみましょう。リストの要素のどれか1つをピボットとします。ピボットよりも小さい値のリストと大きい値のリストに分けてそれぞれソートします。それぞれソートした結果とピボットを結合すればソート済みのリストが手に入ります。簡単のためピボットは先頭要素としましょう。
+クイックソードのアルゴリズムを書いてみましょう。リストの要素のどれか1つをピボットとします。ピボットよりも小さい値のリストと大きい値のリストに分けてそれぞれソートします。それぞれソートした結果とピボットを結合すればソート済みのリストが手に入ります。簡単のするためにピボットは先頭要素で固定としましょう。
 
 ```scala
 def quickSort(xs: List[Int]): List[Int] = xs match {
@@ -272,7 +272,7 @@ def sum2(xs: List[Int], acc: Int): Int = xs match {
 
 ただ、sum2メソッドを直接呼び出してしまうかもしれませんし、末尾再帰を実現するたびにこのようなメソッドが増えてしまいます。メソッドを使う側にはsum2メソッドの存在が分からない方がいいでしょう。これを実現する方法は3つあります。
 
-1つ目は、`private`修飾子を使う方法です。JavaやRubyでもおなじみの方法です。`private`をつけたメソッドは外部から呼び出せなくなります。
+1つ目は、`private`修飾子を使う方法です。JavaやRubyでもおなじみの方法です。`private`をつけたメソッドは外部から呼び出せなくなります（※ 以下のコードをREPLで読み込んでもうまく動きません。実際はクラスの中などに書きます）。
 
 ```scala
 def sum(xs: List[Int]): Int = sum2(xs, 0)
