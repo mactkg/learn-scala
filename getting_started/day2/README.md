@@ -169,10 +169,7 @@ def maximum(xs: List[Int]): Int = {
 }
 ```
 
-REPLで読み込んで実行してみます。
-
 ```scala
-scala> :load maximum.scala
 scala> val xs = List(3, 6, 1, 7, 2, 5)
 scala> maximum(xs)
 ```
