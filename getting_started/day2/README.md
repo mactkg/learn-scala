@@ -64,12 +64,12 @@ java.lang.IllegalArgumentException
 `tail`は`=>`の右側で使っていないので、`_`で置き換えてしまいましょう。置き換えなくてもいいですが、`_`で置き換えることで先頭要素以外は使ってないんだな、と分かりやすくなります。
 
 ```scala
-scala> def head(xs: List[Int]): Int = {
-     |   xs match {
-     |     case Nil    => throw new IllegalArgumentException
-     |     case x :: _ => x
-     |   }
-     | }
+def head(xs: List[Int]): Int = {
+  xs match {
+    case Nil    => throw new IllegalArgumentException
+    case x :: _ => x
+  }
+}
 ```
 
 パターンマッチを使って条件分岐しつつ変数に値を代入することができました。パターンマッチに限りませんが変数に値を代入することを「束縛する」と言うこともできます。
@@ -77,10 +77,10 @@ scala> def head(xs: List[Int]): Int = {
 headメソッドは結局1つのmatch式で出来上がってます。1つの式からなるメソッドの場合、外側の`{}`はいらないので消してしまいましょう。
 
 ```scala
-scala> def head(xs: List[Int]): Int = xs match {
-     |   case Nil => throw new IllegalArgumentException
-     |   case x :: _ => x
-     | }
+def head(xs: List[Int]): Int = xs match {
+  case Nil => throw new IllegalArgumentException
+  case x :: _ => x
+}
 ```
 
 パターンマッチはタプルにも使えます。条件分岐しつつタプルの要素を変数に束縛することもできます。
@@ -613,7 +613,9 @@ f: (x: Shape)String
 
 コンパイラが警告を出してくれます。これは非常に助かります。ケースクラスが継承する`abstract class`には`sealed`をつけた方がいいでしょう。
 
-ケースクラスはクラスと比べて非常に便利です。データを表すようなクラスを作る場合は基本的にケースクラスと`sealed`を使うといいです。`sealed`を使って定義された型は代数的データ型で言うところの直和型なります。代数的データ型については深堀りできないのでしませんが（知識が足りなくてできません・・・）、調べてみるとおもしろいと思います。
+ケースクラスはクラスと比べて非常に便利です。データを表すようなクラスを作る場合は基本的にケースクラスと`sealed`を使うといいです。
+
+ケースクラスを使って定義された型、RectangleやCircleは代数的データ型で言うところの直積型になります。そして`sealed`を使って定義された型、Shape型は直和型なります。ケースクラスで定義されたクラスはProductというクラスを自動的に継承するのですが、このProductというのは直積型を表しているようです。代数的データ型については深堀りできないのでしませんが（知識が足りなくてできません・・・）、調べてみるとおもしろいと思います。
 
 
 
