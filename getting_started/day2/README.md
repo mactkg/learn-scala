@@ -6,44 +6,34 @@ Day1でif式をやりましたが、パターンマッチを使うと条件分�
 ```scala
 scala> val x = 7
 scala> x match {
-     |   case 1 => "Good!"
+     |   case 1 => "Great!"
+     |   case 2 => "Good!"
      |   case _ => "Sorry"
      | }
 res0: String = Sorry
 ```
 
-`case 1 =>` というのが、xの値が1だった場合 `=>` の右側の式を評価（実行）しますよ、ということです。`case _ =>` というのは、それ以外の場合 `=>` の右側の式を評価しますよ、ということになります。matchも式なので値を返します。上の例だと、xの値は1ではないので"Sorry"という文字列が返ってますね。
+`case 1 =>` というのが、xの値が1だった場合 `=>` の右側の式を評価（実行）しますよ、ということです。`case 2 =>` というのは、xの値が2だった場合になります。`case _ =>` というのは、それ以外の場合 `=>` の右側の式を評価しますよ、ということになります。matchも式なので値を返します。上の例だと、xの値は1ではないので"Sorry"という文字列が返ってますね。
 
-パターンマッチはリストにも使えます。条件分岐しつつリストの先頭要素を変数に束縛することもできます。よく分からないかもしれませんが、コードを見れば分かると思います。
+パターンマッチはリストにも使えます。条件分岐しつつリストの先頭要素と残りのリストを変数に束縛することもできます。よく分からないかもしれませんが、コードを見れば分かると思います。
 
 リストの先頭要素を取得するheadメソッドをパターンマッチを使ってつくってみましょう。
 
 ```scala
-scala> def head(xs: List[Int]): Int = {
-     |   xs match {
-     |     case Nil       => throw new IllegalArgumentException
-     |     case x :: tail => x
-     |   }
-     | }
-head: (xs: List[Int])Int
-
-scala> head(List(1,2,3))
-res1: Int = 1
-
-scala> head(List())
-java.lang.IllegalArgumentException
-  at .head(<console>:9)
-  ... 32 elided
-
-scala> head(List(5))
-res2: Int = 5
+// head.scala
+def head(xs: List[Int]): Int = {
+  xs match {
+    case Nil       => throw new IllegalArgumentException
+    case x :: tail => x
+  }
+}
 ```
 
-`Nil`は空のリストでしたね。`case Nil` は`xs`が空のリストだったら、という意味です。この例ではエラーを発生させています（例外はいずれ・・・）。
+`Nil`は空のリストでしたね。`case Nil` は`xs`が空のリストだったら、という意味です。このheadメソッドではエラーを発生させています（例外はいずれ・・・）。
 
-`case x :: tail` は`xs`が空じゃない場合にマッチしますが、マッチさせると同時に変数`x`に先頭要素を、変数`tail`に先頭を取り除いた残りのリストを代入しています。`::`は前回cons演算子のところでやったように値とリストをつなげるときに使っていました。パターンマッチのときでも同じような意味になります。`case x :: tail`というのは、`xs`が`x`と`tail`をconsでつなげたものだったら、という意味になるわけです。`tail`は空のリストでもそうでなくても構いません、どちらにしろconsでつなげることができますからね。
+`case x :: tail` は`xs`が空じゃない場合にマッチしますが、マッチさせると同時に変数`x`に先頭要素を、変数`tail`に先頭を取り除いた残りのリストを代入します。`::`は前回cons演算子のところで値とリストをつなげるときに使っていました。パターンマッチのときでも同じような意味になります。`case x :: tail`というのは、パターンマッチの対象（`xs`）が`x`と`tail`をconsでつなげたものだったら、という意味になるわけです。`tail`は空のリストでもそうでなくても構いません、どちらにしろconsでつなげることができますからね。
 
-`case x :: tail =>` というのは以下のように書いた場合と同じことをしてくれてるイメージです。
+`case x :: tail =>` というのは以下のように書いた場合と同じことをしてくれてると考えれば分かるのではないでしょうか。
 
 ```scala
 case list => {
@@ -52,7 +42,26 @@ case list => {
 }
 ```
 
-`tail`は`=>`の右側で使っていないので、`_`で置き換えてしまいましょう。
+REPLに読み込んで使ってみます。
+
+```scala
+scala> :load head.scala
+
+scala> head(List(1,2,3))
+res1: Int = 1
+
+scala> head(List(5))
+res2: Int = 5
+
+scala> head(List())
+java.lang.IllegalArgumentException
+  at .head(<console>:9)
+  ... 32 elided
+```
+
+ちゃんと動いてます。
+
+`tail`は`=>`の右側で使っていないので、`_`で置き換えてしまいましょう。置き換えなくてもいいですが、`_`で置き換えることで先頭要素以外は使ってないんだな、と分かりやすくなります。
 
 ```scala
 scala> def head(xs: List[Int]): Int = {
@@ -65,7 +74,7 @@ scala> def head(xs: List[Int]): Int = {
 
 パターンマッチを使って条件分岐しつつ変数に値を代入することができました。パターンマッチに限りませんが変数に値を代入することを「束縛する」と言うこともできます。
 
-headメソッドは結局1つのmatch式で出来上がってます。この場合、外側の`{}`はいらないので消してしまいましょう。
+headメソッドは結局1つのmatch式で出来上がってます。1つの式からなるメソッドの場合、外側の`{}`はいらないので消してしまいましょう。
 
 ```scala
 scala> def head(xs: List[Int]): Int = xs match {
@@ -85,13 +94,15 @@ scala> val a = ("dog", "papico", 3)
 そして、種別が犬（"doc"）の場合とクモ（"spider"）の場合とそれ以外で処理を分けたいとき、こう書けます。
 
 ```scala
-scala> def f(x: (String, String, Int)): String = x match {
-     |   case ("dog", name, age)  => "I like dog! " + name + " is " + age + " years old!"
-     |   case ("spider", name, _) => "I don't like spider. Sorry " + name
-     |   case _ => "I have no interest"
-     | }
-f: (x: (String, String, Int))String
+def f(x: (String, String, Int)): String = x match {
+  case ("dog",    name, age)  => "I like dog! " + name + " is " + age + " years old!"
+  case ("spider", name, _)    => "I don't like spider. Sorry " + name
+  case _                      => "I have no interest"
+}
+```
 
+```scala
+scala> val a = ("dog", "papico", 3)
 scala> f(a)
 res0: String = I like dog! papico is 3 years old!
 
@@ -107,29 +118,33 @@ res2: String = I have no interest
 タプルとリストを組み合わせることだってできます。さっきつくったfメソッドを改良してみましょう。年齢の後ろに好きな食べ物をリストで持たせます。
 
 ```scala
-scala> def f(x: (String, String, Int, List[String])): String = x match {
-     |   case ("dog", name, age, Nil)       => "I like dog! " + name + " is " + age + " years old!"
-     |   case ("dog", name, age, food :: _) => "I like dog! " + name + " is " + age + " years old! " + name + " like " + food + "!"
-     |   case ("spider", name, _, _)        => "I don't like spider. Sorry " + name
-     |   case _ => "I have no interest"
-     | }
-f: (x: (String, String, Int, List[String]))String
+def f(x: (String, String, Int, List[String])): String = x match {
+  case ("dog",    name, age, Nil)       => "I like dog! " + name + " is " + age + " years old!"
+  case ("dog",    name, age, food :: _) => "I like dog! " + name + " is " + age + " years old! " + name + " likes " + food + "!"
+  case ("spider", name, _, _)           => "I don't like spider. Sorry " + name
+  case _                                => "I have no interest"
+}
+```
 
+```scala
 scala> f(("dog", "papico", 3, List("meet", "fish")))
 res6: String = I like dog! papico is 3 years old!papico like meet!
 ```
 
+これの何が便利かって入れ子になってるリストにもパターンマッチできるところです。入れ子になってるケースクラスももちろん対応できます。こういった分岐をif式だけで書くと複雑になってしまうでしょう。
+
+
 
 ## String interpolation
-さっきのfメソッドですが、文字列結合の部分がちょっと面倒でしたよね。これはString interpolationと呼ばれる仕組みできれいに書けます。いわゆる変数展開みたいに使えます。
+さっきのfメソッドですが、文字列結合の部分がちょっと面倒でしたよね。これはString interpolationと呼ばれる仕組みできれいに書けます。いわゆる変数展開みたいに使えます。文字列リテラルの先頭に"s"という書きます。リテラル内で変数を使うときは `$変数名` です。
 
 ```scala
-scala> def f(x: (String, String, Int, List[String])): String = x match {
-     |   case ("dog", name, age, Nil) => s"I like dog! $name is $age years old!"
-     |   case ("dog", name, age, food :: _) => s"I like dog! $name is $age years old! $name like $food!"
-     |   case ("spider", name, _, _) => s"I don't like spider. Sorry $name"
-     |   case _ => "I have no interest"
-     | }
+def f(x: (String, String, Int, List[String])): String = x match {
+  case ("dog",    name, age, Nil)       => s"I like dog! $name is $age years old!"
+  case ("dog",    name, age, food :: _) => s"I like dog! $name is $age years old! $name likes $food !"
+  case ("spider", name, _, _)           => s"I don't like spider. Sorry $name"
+  case _                                => s"I have no interest"
+}
 ```
 
 変数展開よりも色々できるのですが、ここではやりません。こちらが参考になります => [文字列の補間](http://docs.scala-lang.org/ja/overviews/core/string-interpolation.html)
@@ -145,6 +160,7 @@ Intのリストに格納されている数値の中から一番大きな値を�
 
 ```scala
 def maximum(xs: List[Int]): Int = {
+  if (xs.size == 0) throw new IllegalArgumentException
   var max = 0
   for(x <- xs) {
     if (max < x) max = x
@@ -161,9 +177,9 @@ scala> val xs = List(3, 6, 1, 7, 2, 5)
 scala> maximum(xs)
 ```
 
-`var`を使ってmaximumメソッドを実装できました。しかし、副作用のない処理を書くには再代入可能な変数は邪魔になることが多く、理由がない限り`val`を使うべきでしょう。
+`var`を使ってmaximumメソッドを実装できました。しかし、副作用のない処理を書くには再代入可能な変数は邪魔になることが多く、また予期しないところ代入してしまってバグとなってしまったりします。理由がない限りは`var`ではなく`val`を使うべきでしょう。
 
-では、maximumメソッドを`var`を使わずに定義するにはどうしたらいいでしょうか？再帰を使いましょう。
+では、maximumメソッドのようなループ処理を`var`を使わずに定義するにはどうしたらいいでしょうか？再帰を使いましょう。
 
 再帰とはメソッド内で自分自身を呼び出すことです。下のmaximumメソッドでは、メソッド本体で自分自身であるmaximumメソッドを呼び出しています。
 
@@ -178,7 +194,7 @@ def maximum(xs: List[Int]): Int = xs match {
 }
 ```
 
-再帰を使うことで`var`をなくしつつループ処理を実現できました。さらに再帰を使うとコードが「どうやって求めるか」という手続きではなく、「求めるものが何であるか」という宣言に近づいていきます。
+再帰を使うことで`var`をなくしつつループ処理を実現できました。慣れるまでは1ステップずつじっくりと変数の値の変化をメモしながらトレースするといいと思います。
 
 再帰を書くにはコツがあります。
 
@@ -195,7 +211,7 @@ def sum(xs: List[Int]): Int = xs match {
 }
 ```
 
-実際に使ってみましょう。イメージが掴みづらい場合は簡単な例から試してイメージしていくと分かりやすいです。
+実際に使ってみましょう。イメージが掴みづらい場合は簡単な例から1ステップずつイメージしていくと分かりやすいです。
 
 ```scala
 scala> sum(List())
@@ -207,15 +223,24 @@ scala> sum(List(1,2,3,4,5))
 リストの中に特定の要素が含まれているかを調べるメソッドも再帰で書いてみます。
 
 ```scala
-def contains(x: Int, xs: List[Int]): Boolean = xs match {
+def contains(a: Int, xs: List[Int]): Boolean = xs match {
   case Nil       => false
-  case y :: tail =>
-    if (x == y) true
-    else contains(x, tail)
+  case x :: tail =>
+    if (x == a) true
+    else        contains(a, tail)
 }
 ```
 
-クイックソードのアルゴリズムを書いてみましょう。リストの要素のどれか1つをピボットとします。ピボットよりも小さい値のリストと大きい値のリストに分けてそれぞれソートします。それぞれソートした結果とピボットを結合すればソート済みのリストが手に入ります。簡単のするためにピボットは先頭要素で固定としましょう。
+階乗の計算も再帰で書いてみましょう。BigIntは大きな数値でも扱うことができる型です。
+
+```scala
+def fact(n: Int): BigInt = n match {
+  case 0 => 1
+  case _ => n * fact(n - 1)
+}
+```
+
+クイックソートを書いてみましょう。リストの要素のどれか1つをピボットとします。ピボットよりも小さい値のリストと大きい値のリストに分けてそれぞれソートします。それぞれソートした結果とピボットを結合すればソート済みのリストが手に入ります。簡単にするためにピボットは先頭要素で固定としましょう。
 
 ```scala
 def quickSort(xs: List[Int]): List[Int] = xs match {
@@ -229,91 +254,92 @@ def quickSort(xs: List[Int]): List[Int] = xs match {
 }
 ```
 
-どうでしょうか。やりたいことをそのまま宣言的に書けたのではないでしょうか。部分問題への分割とリストのパターンマッチが相性抜群ですね。
+どうでしょうか。やりたいことをそのまま宣言的に書けたのではないでしょうか。部分問題への分割とリストのパターンマッチが相性抜群ですね。ループではどうやって計算するかという手続きを書くことになりますが、再帰とパターンマッチを使うとやりたいことを宣言的に書けることが多いです。
 
 
 
 ## 末尾再帰
 
-再帰を使うとループ処理と比べて宣言的に書くことができ、かつ、再代入可能な変数がないため、間違えにくく読みやすいコードになることが多いです。しかし、ループと比べてメソッド呼び出しの回数が増えます。これはパフォーマンスの劣化につながりますし、大量のメソッド呼び出しによりエラーが発生する可能性もあります。
+再帰を使うとループ処理と比べて宣言的に書くことができ、かつ、再代入可能な変数がないため、間違えにくく読みやすいコードになることが多いです。しかし、ループと比べてメソッド呼び出しの回数が増えます。これはパフォーマンスの劣化につながりますし、大量のメソッド呼び出しによりエラー（スタックオーバーフロー）が発生する可能性もあります。
 
-でも大丈夫です。再帰処理を「末尾再帰」で書くことにより、この問題を回避できます。末尾再帰とは、関数の最後で自分自身を呼び出す再帰のことです。末尾再帰はコンパイル時にコンパイラによってループ処理に置き換えられるため、問題を回避できるのです。
-
-今まで出てきた例の中では、containsの例が末尾再帰です。それ以外は末尾再帰ではないです。しかし、単純なループで書けるものは変数を追加することで末尾再帰に置き換えることができます。たとえば、sumを末尾再帰に書き換えたsum2メソッドを書いてみましょう。
+実際、factに大きな値を指定するとスタックオーバーフローが起きます。指定する数値は環境によって異なるので小さな値から徐々に大きくしてみてください。
 
 ```scala
-def sum2(xs: List[Int], acc: Int): Int = xs match {
-  case Nil       => acc
-  case x :: tail => sum2(tail, x + acc)
+scala> fact(10000)
+java.lang.StackOverflowError
+```
+
+再帰処理を「末尾再帰」で書くことにより、この問題を回避できます。末尾再帰とは、関数の最後で自分自身を呼び出す再帰のことです。末尾再帰はコンパイル時にコンパイラによってループ処理に置き換えられるため、問題を回避できるのです。
+
+今まで出てきた例の中では、containsメソッドが末尾再帰です。それ以外は末尾再帰ではないです。factメソッドも末尾再帰に見えますが、最後に評価されるのは` * `であるため末尾再帰ではありません。
+
+単純なループで書けるものは変数を追加することでただの再帰を末尾再帰に置き換えることができます。factメソッドを末尾再帰の形に書き換えてみましょう。
+
+```scala
+def fact2(n: Int, acc: BigInt): BigInt = n match {
+  case 0 => acc
+  case _ => fact2(n - 1, acc * n)
 }
 ```
 
-accという変数が増えました。これはアキュムレータ（蓄積変数）と呼ばれます。元々のsumの場合は`x + sum(tail)`というように再帰呼び出しの結果を足し合わせていました。sum2の場合は`sum(tail, x + acc)`というようにアキュムレータに足し合わせて再帰呼び出しをしています。これによって関数の最後で再帰呼び出しをすることになりました。つまり末尾再帰になりました。sum2は末尾再帰なのでコンパイル時にループ処理に置き換えられるためループよりもパフォーマンスが悪かったりすることはありません。
+`acc`という変数が増えました。これはアキュムレータ（蓄積変数）と呼ばれます。元々のfactメソッドの場合は`n * fact(n - 1)`というように再帰呼び出しの結果を掛け合わせていました。fact2メソッドの場合は`fact2(n - 1, acc * n)`というようにアキュムレータに掛け合わせてから再帰呼び出しをしています。これによって関数の最後で再帰呼び出しをすることになりました。つまり末尾再帰になりました。
 
-ただ、引数が増えたことにより、メソッドを使う側がちょっと使いづらくなってしまいましたね。sum2メソッドを使う人は適切なアキュムレータの初期値を指定しないといけません。sum2の場合は0です。
+fact2メソッドは末尾再帰なのでコンパイル時にループ処理に置き換えられるためスタックオーバーフローが発生しません。また、ループよりもパフォーマンスが悪かったりすることもありません。
+
+ただ、引数が増えたことにより、メソッドを使う側がちょっと使いづらくなってしまいましたね。fact2メソッドを使う人は適切なアキュムレータの初期値を指定しないといけません。fact2メソッドの場合は1です。
 
 ```scala
-scala> sum(List(1,2,3,4,5))
-scala> sum2(List(1,2,3,4,5), 0)
+scala> fact(10)
+scala> fact2(10, 1)
 ```
 
-アキュムレータの初期値はメソッドの性質によってことなります。足し合わせる場合は0でいいですが、掛け合わせる場合は1が適切です。このような判断をメソッドを使う側が考えるのは使い勝手が悪いですし、間違えてしまうかもしれません。なので以下のようにsumからsum2を呼び出すようにします。
+アキュムレータの初期値はメソッドの性質によってことなります。掛け合わせる場合は1ですが、足し合わせる場合は0が適切です。このような判断をメソッドを使う側が考えるのは使い勝手が悪いですし、間違えてしまうかもしれません。なので以下のようにfactからfact2を呼び出すようにします。
+
+（※ 以下のコードをREPLで:loadを使って読み込んでもうまく動きません。:loadの読み込みは1行ずつ評価するためfactメソッドが定義されたタイミングではfact2メソッドは存在していない、と判断されてしまいます。:loadの代わりに、:pasteで読み込むとこの問題を解決できます）。
 
 ```scala
-def sum(xs: List[Int]): Int = sum2(xs, 0)
+def fact(n: Int): BigInt = fact2(n, 1)
 
-def sum2(xs: List[Int], acc: Int): Int = xs match {
-  case Nil       => acc
-  case x :: tail => sum2(tail, x + acc)
+def fact2(n: Int, acc: BigInt): BigInt = n match {
+  case 0 => acc
+  case _ => fact2(n - 1, acc * n)
 }
 ```
 
-これでメソッドを使う側は、sumメソッドを使っている限りアキュムレータを意識する必要はありません。さらにsumメソッドの内部では末尾再帰のsum2メソッドを呼び出しているのでループに比べてパフォーマンスが劣るということもありません。
+これでメソッドを使う側は、factメソッドを使っている限りアキュムレータを意識する必要はありません。さらにfactメソッドの内部では末尾再帰のfact2メソッドを呼び出しているのでスタックオーバーフローが発生したり、ループに比べてパフォーマンスが劣るということもありません。
 
-ただ、sum2メソッドを直接呼び出してしまうかもしれませんし、末尾再帰を実現するたびにこのようなメソッドが増えてしまいます。メソッドを使う側にはsum2メソッドの存在が分からない方がいいでしょう。これを実現する方法は3つあります。
+まだ不十分です。fact2メソッドを直接呼び出してしまうかもしれませんし、他の末尾再帰なメソッドを定義するたびに余分なメソッドが増えてしまいます。メソッドを使う側にはfact2メソッドの存在が分からない方がいいでしょう。これを実現する方法は3つあります。
 
-1つ目は、`private`修飾子を使う方法です。JavaやRubyでもおなじみの方法です。`private`をつけたメソッドは外部から呼び出せなくなります（※ 以下のコードをREPLで読み込んでもうまく動きません。実際はクラスの中などに書きます）。
+1つ目は、`private`修飾子を使う方法です。JavaやRubyでもおなじみの方法です。`private`をつけたメソッドは外部から呼び出せなくなります
 
 ```scala
-def sum(xs: List[Int]): Int = sum2(xs, 0)
+def fact(n: Int): BigInt = fact2(n, 1)
 
-private def sum2(xs: List[Int], acc: Int): Int = xs match {
-  case Nil       => acc
-  case x :: tail => sum2(tail, x + acc)
+private def fact2(n: Int, acc: BigInt): BigInt = n match {
+  case 0 => acc
+  case _ => fact2(n - 1, acc * n)
 }
 ```
 
-2つ目は、メソッド内にメソッドを定義する方法です。defの中でdefを使えるのです。メソッド内で定義されたメソッドはprivate扱いになり外部から呼び出すことはできません。
+2つ目は、メソッド内にメソッドを定義する方法です。`def`の中で`def`を使えるのです。メソッド内で定義されたメソッドは`private`扱いになり外部から呼び出すことはできません。
 
 ```scala
-def sum(xs: List[Int]): Int = {
-  def loop(xs: List[Int], acc: Int): Int = xs match {
-    case Nil       => acc
-    case x :: tail => loop(tail, x + acc)
+def fact(n: Int): BigInt = {
+  def loop(n: Int, acc: BigInt): BigInt = n match {
+    case 0 => acc
+    case _ => loop(n - 1, acc * n)
   }
-  loop(xs, 0)
+  loop(n, 1)
 }
+
 ```
 
 3つ目は、引数のデフォルト値を使う方法です。Scalaでは引数が未指定の場合のデフォルト値を設定できます。ただ、この方法では間違ったアキュムレータの初期値を与えることができる状態なので好ましくないでしょう。
 
 ```scala
-def sum(xs: List[Int], acc: Int = 0): Int = xs match {
-  case Nil       => acc
-  case x :: tail => sum(tail, x + acc)
-}
-```
-
-maximumも末尾再帰で書き換えてみましょう。
-
-```scala
-def maximum(xs: List[Int]): Int = {
-  def loop(xs: List[Int], acc: Int): Int = xs match {
-    case Nil       => throw new IllegalArgumentException
-    case x :: Nil  => if (x > acc) x else acc
-    case x :: tail => loop(tail, if (x > acc) x else acc)
-  }
-  loop(xs, 0)
+def fact(n: Int, acc: BigInt = 1): BigInt = n match {
+  case 0 => acc
+  case _ => fact(n - 1, acc * n)
 }
 ```
 
@@ -609,8 +635,8 @@ abstract class Shape {
 
 ## 練習問題
 
-1. 階乗を計算するメソッドを再帰を使って書いてください。
-1. 上の問題でつくったメソッドを末尾再帰の形に書き換えてください。
+1. 再帰を使って定義したmaximumメソッドを末尾再帰になるように書き換えてください。
+1. 再帰を使って定義したsumメソッドを末尾再帰になるように書き換えてください。
 1. リストのtakeメソッドと同じことをするメソッドを末尾再帰で書いてください。
 1. ソート済みの数値のリストから2分探索をするメソッドを書いてください。以下のようなシグニチャのメソッドです。
    
