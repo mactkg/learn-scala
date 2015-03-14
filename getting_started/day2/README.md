@@ -351,23 +351,21 @@ def fact(n: Int, acc: BigInt = 1): BigInt = n match {
 
 自分で型をつくってみましょう。型を定義する方法はいくつかありますが、クラスを使う方法を見ていきます。
 
-まず、クラスを定義するときは`class`を使います。インスタンス化するときは`new`を使います。
+まず、クラスを定義するときは`class`を使います。インスタンス化するときは`new`を使います。Rectangleクラスをインスタンス化してつくったオブジェクトの型はRectangle型になります。
 
 ```scala
 scala> class Rectangle
 scala> val x = new Rectangle
 ```
 
-Rectangleをいろいろいじっていくので、Shape.scalaに書いて使うときはREPLにロードして使いましょう。
+Rectangleクラスをいろいろいじっていくので、Shape.scalaに書いて使うときはREPLにロードして使うことにします。
 
-長方形を左下の座標と右上の座標で表すことにします。コンストラクタで指定できるようにしましょう。コンストラクタの引数は、クラス名の右側に書きます。
+長方形を左下の座標と右上の座標で表すことにしましょう。コンストラクタで指定できるようにします。コンストラクタの引数は、クラス名の右側に書きます。
 
 ```scala
 // Rectangle.scala
 class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double)
 ```
-
-使ってみましょう。
 
 ```scala
 scala> :load Rectangle.scala
@@ -375,7 +373,7 @@ scala> val a = new Rectangle(0,0,2,3)
 a: Rectangle = Rectangle@7cef4e59
 ```
 
-REPLの出力が何やら分かりづらいですね。REPLの出力ではオブジェクトのtoStringメソッドが呼ばれます。なので、RectangleにもtoStringメソッドを追加しましょう。
+REPLの出力が何やら分かりづらいですね。REPLの出力ではオブジェクトのtoStringメソッドが呼ばれます。なので、RectangleクラスにもtoStringメソッドを追加しましょう。
 
 ```scala
 // Rectangle.scala
@@ -395,7 +393,7 @@ Loading Rectangle.scala...
              ^
 ```
 
-エラーになってしまいました。"method toString needs override modifier" と表示されています。ScalaではすべてのクラスはAnyクラスを継承しています。そしてAnyクラスでtoStringが定義されているため、RectangleクラスでtoStringを定義するとオーバーライドすることになります。Scalaではオーバーライドするときは`override`をdefに左側に書く必要があります。
+コンパイルエラーになってしまいました。"method toString needs override modifier" と表示されています。ScalaではすべてのクラスはAnyクラスを継承しています。そしてAnyクラスでtoStringメソッドが定義されているため、RectangleクラスでtoStringメソッドを定義するとオーバーライドすることになります。Scalaではオーバーライドするときは`override`を`def`に左側に書く必要があります。
 
 ```scala
 class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
@@ -411,7 +409,21 @@ scala> val a = new Rectangle(0,0,2,3)
 a: Rectangle = Rectangle(0.0, 0.0, 2.0, 3.0)
 ```
 
-コンストラクタのパラメータに`val`、もしくは、`var`をつけることで、外部からパラメータにアクセスできるようになります。理由がない限り`var`ではなく`val`にしましょう。`var`にしてしまうとオブジェクトがミュータブルになってしまい扱いづらくなります。
+メソッドだけでなくメンバー変数を定義することもできます。
+
+```scala
+class Rectangle(ax: Double, ay: Double, bx: Double, by: Double) {
+  val x1 = ax
+  val y1 = ay
+  val x2 = bx
+  val y2 = by
+  override def toString = s"Rectangle($x1, $y1, $x2, $y2)"
+}
+```
+
+上のように単純にコンストラクタのパラメータを公開したいだけの場合は、コンストラクタのパラメータに`val`をつけることで、外部からパラメータにアクセスできるようになります。
+
+`val`じゃなくて`var`も使えますが、理由がない限り`val`にしましょう。`var`にしてしまうとオブジェクトがミュータブルになってしまい扱いづらくなります。
 
 ```scala
 class Rectangle(val x1: Double, val y1: Double, val x2: Double, val y2: Double) {
@@ -419,7 +431,7 @@ class Rectangle(val x1: Double, val y1: Double, val x2: Double, val y2: Double) 
 }
 ```
 
-外部からコンストラクタパラメータにアクセスする場合は、`.`の後にパラメータ名を指定するだけです。以下の例の場合は`x1`という名前のメソッドを呼び出して、パラメータ`x1`の値にアクセスできます。
+外部からメンバ変数にアクセスする場合は、メソッド呼び出しと同様に`.`の後にメンバ変数名を指定するだけです。
 
 ```scala
 scala> val a = new Rectangle(0,0,2,3)
@@ -433,17 +445,18 @@ res6: Double = 0.0
 
 ```scala
 class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
+  override def toString = s"Rectangle($x1, $y1, $x2, $y2)"
   def area: Double = math.abs(x2 - x1) * math.abs(y2 - y1)
 }
 ```
 
-Rectangleという型を自分でつくることができました。自分でつくった型のリストをつくったりももちろんできます。Rectangleのリストを受け取って面積の合計を返すメソッドをつくって試してみましょう。
+Rectangleという型をクラスを使ってつくることができました。自分でつくった型のリストをつくったりももちろんできます。Rectangle型のリストを受け取って面積の合計を返すメソッドをつくって試してみましょう。
 
 ```scala
 scala> def sumArea(xs: List[Rectangle]): Double = {
      |   def loop(xs: List[Rectangle], acc: Double): Double = xs match {
      |     case Nil => acc
-     |     case x :: tail => loop(tail, x.area + acc)
+     |     case x :: tail => loop(tail, acc + x.area)
      |   }
      |   loop(xs, 0)
      | }
@@ -454,9 +467,12 @@ scala> sumArea(xs)
 
 
 ## 継承
+
 さて、長方形だけでなく円もつくりたくなりました。しかも`sumArea`メソッドでは長方形と円と両方を受け取って面積の合計を返したいです。こういう場合は、長方形と円を抽象化して図形として扱えるようにすればいいです。JavaやRubyでも継承ってものがありますが、Scalaにもあります。
 
-抽象化して抽出された図形という型はインスタンス化することはないので、`abstract`というキーワードを`class`の前につけます。図形をShapeという型で表すことにします。Shape型に属するケースクラスを定義するときは`extends`キーワードを使います。
+抽象化して抽出された図形という型はインスタンス化はする必要がないので、`abstract`というキーワードを`class`の前につけます。`abstract`がついたクラスを抽象クラスと呼び、インスタンス化することはできません。図形をShapeという型で表すことにします。そして、RectangleクラスとCircleクラスは、Shapeクラスを継承します。継承は`extends`キーワードを使います。
+
+抽象クラスを継承することにより、Rectangle型とCircle型は、Shape型のサブ型となります。逆に、Shape型は、Rectangle型とCircle型のスーパー型となります。
 
 ```scala
 abstract class Shape {
@@ -474,7 +490,7 @@ class Circle(val x: Double, val y: Double, val r: Double) extends Shape {
 }
 ```
 
-Rectangleは先ほどと同じように、CircleもRectangleと同じように使えます。
+Rectangleクラスは先ほどと同じように、CircleクラスもRectangleクラスと同じように使えます。インスタンス化してつくったオブジェクトはそれぞれ、Rectangle型とCircle型になります。
 
 ```scala
 scala> val rec = new Rectangle(0, 0, 2, 2)
@@ -483,7 +499,7 @@ scala> circle.x
 scala> circle.r
 ```
 
-両方をShapeとして扱うこともできます。
+Rectangle型とCircle型はShape型のサブ型なので、Shape型のオブジェクトとして扱うこともできます。
 
 ```scala
 scala> def sumArea(xs: List[Shape]): Double = {
@@ -546,9 +562,9 @@ scala> f(circle)
 scala> f(Circle(0,0,5))
 ```
 
-ケースクラスの場合だけに限った話ではないですが、パターンマッチするときはパターンに漏れがないようにすることが大事です。これは結構大変なことです。例えば三角形を追加した場合、Shapeでmatch式している箇所全体が影響してしまいます。
+ケースクラスの場合だけに限った話ではないですが、パターンマッチするときはパターンに漏れがないようにすることが大事です。これは結構大変なことです。例えば三角形をShape型のサブ型として追加した場合、Shape型でmatch式している箇所全体が影響してしまいます。
 
-例えば、先ほどのfメソッドからRectangleにマッチする1行を削除して定義し直して使ってみましょう。
+例えば、先ほどのfメソッドからRectangle型にマッチする1行を削除して定義し直して使ってみましょう。
 
 ```scala
 scala> def f(x: Shape): String = x match {
@@ -566,18 +582,18 @@ scala.MatchError: Rectangle(0.0,0.0,3.0,4.0) (of class Rectangle)
   ... 32 elided
 ```
 
-パターンから漏れていたRectangleを指定するとエラーが発生しました。実行時エラーです。
+パターンから漏れていたRectangle型を指定するとエラーが発生しました。実行時エラーです。
 
 この問題に対応するのが`sealed`修飾子です。`sealed`を`abstract class`の前に書くことで、パターンマッチに漏れがある場合にコンパイラが警告を出してくれます。
 
-では、Shapeに`sealed`をつけてみます。
+では、Shape型に`sealed`をつけてみます。
 
 ```scala
 sealed abstract class Shape {
    ・・・
 ```
 
-もう一度fメソッドをRectangleにはマッチしない形で定義してみます。
+もう一度fメソッドをRectangle型にはマッチしない形で定義してみます。
 
 ```scala
 scala> def f(x: Shape): String = x match {
@@ -593,7 +609,7 @@ f: (x: Shape)String
 
 コンパイラが警告を出してくれます。これは非常に助かります。ケースクラスが継承する`abstract class`には`sealed`をつけた方がいいでしょう。
 
-ケースクラスはクラスと比べて非常に便利です。データを表すようなクラスを作る場合は基本的にケースクラスを使うといいです。
+ケースクラスはクラスと比べて非常に便利です。データを表すようなクラスを作る場合は基本的にケースクラスと`sealed`を使うといいです。`sealed`を使って定義された型は代数的データ型と呼ばれるものになります。代数的データ型については深堀りできないのでしませんが（知識が足りなくてできません・・・）、調べてみるとおもしろいと思います。
 
 
 
@@ -608,20 +624,7 @@ abstract class Shape {
 }
 ```
 
-使ってみましょう。
-
-```scala
-scala> Rectangle(0,0,1,2).lessThan(Rectangle(0,0,3,8))
-res7: Boolean = true
-
-scala> Rectangle(0,0,3,8).lessThan(Rectangle(0,0,1,2))
-res8: Boolean = false
-
-scala> Rectangle(0,0,1,2).lessThan(Circle(0,0,3))
-res9: Boolean = true
-```
-
-良さそうですね。では、次に、面積の大きい方のオブジェクトを返すmaxメソッドを定義しましょう。先ほどつくったlessThanメソッドを使って引数で指定された図形の方が大きければ引数で指定されたオブジェクトを、そうでなければ自分自身を返します。自分自身を表すオブジェクトが必要なときは、`this`を使います。
+次に、面積の大きい方のオブジェクトを返すmaxメソッドを定義しましょう。先ほどつくったlessThanメソッドを使って引数で指定された図形の方が大きければ引数で指定されたオブジェクトを、そうでなければ自分自身を返します。自分自身を表すオブジェクトが必要なときは、`this`を使います。
 
 ```scala
 abstract class Shape {
