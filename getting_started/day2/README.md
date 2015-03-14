@@ -202,25 +202,7 @@ def maximum(xs: List[Int]): Int = xs match {
 
 [引用元 : すごいHaskll楽しく学ぼう！]
 
-Intのリストから要素の合計値を求めるメソッドを再帰を使って書いてみましょう。基底部を見極め、そして部分問題へと分割します。
-
-```scala
-def sum(xs: List[Int]): Int = xs match {
-  case Nil       => 0
-  case x :: tail => x + sum(tail)
-}
-```
-
-実際に使ってみましょう。イメージが掴みづらい場合は簡単な例から1ステップずつイメージしていくと分かりやすいです。
-
-```scala
-scala> sum(List())
-scala> sum(List(1))
-scala> sum(List(1,2))
-scala> sum(List(1,2,3,4,5))
-```
-
-リストの中に特定の要素が含まれているかを調べるメソッドも再帰で書いてみます。
+リストの中に特定の要素が含まれているかを調べるメソッドを再帰で書いてみます。基底部を見極め、そして部分問題へと分割します。基底部は、Nilの場合です。部分問題への分割はリストのパターンマッチを使いましょう。
 
 ```scala
 def contains(a: Int, xs: List[Int]): Boolean = xs match {
@@ -229,6 +211,15 @@ def contains(a: Int, xs: List[Int]): Boolean = xs match {
     if (x == a) true
     else        contains(a, tail)
 }
+```
+
+実際に使ってみましょう。イメージが掴みづらい場合は簡単な例から1ステップずつイメージしていくと分かりやすいです。
+
+```scala
+scala> contains(1, List())
+scala> contains(1, List(1))
+scala> contains(1, List(2,3))
+scala> contains(1, List(2,3,1))
 ```
 
 階乗の計算も再帰で書いてみましょう。BigIntは大きな数値でも扱うことができる型です。
@@ -340,6 +331,19 @@ def fact(n: Int): BigInt = {
 def fact(n: Int, acc: BigInt = 1): BigInt = n match {
   case 0 => acc
   case _ => fact(n - 1, acc * n)
+}
+```
+
+maximumメソッドも末尾再帰に書き直してみましょう。
+
+```
+def maximum(xs: List[Int]): Int = {
+  def loop(xs: List[Int], acc: Int): Int = xs match {
+    case Nil => throw new IllegalArgumentException
+    case x :: Nil => acc
+    case x :: tail => loop(tail, if (x > acc) x else acc)
+  }
+  loop(xs, 0)
 }
 ```
 
@@ -609,7 +613,7 @@ f: (x: Shape)String
 
 コンパイラが警告を出してくれます。これは非常に助かります。ケースクラスが継承する`abstract class`には`sealed`をつけた方がいいでしょう。
 
-ケースクラスはクラスと比べて非常に便利です。データを表すようなクラスを作る場合は基本的にケースクラスと`sealed`を使うといいです。`sealed`を使って定義された型は代数的データ型と呼ばれるものになります。代数的データ型については深堀りできないのでしませんが（知識が足りなくてできません・・・）、調べてみるとおもしろいと思います。
+ケースクラスはクラスと比べて非常に便利です。データを表すようなクラスを作る場合は基本的にケースクラスと`sealed`を使うといいです。`sealed`を使って定義された型は代数的データ型で言うところの直和型なります。代数的データ型については深堀りできないのでしませんが（知識が足りなくてできません・・・）、調べてみるとおもしろいと思います。
 
 
 
@@ -638,9 +642,8 @@ abstract class Shape {
 
 ## 練習問題
 
-1. 再帰を使って定義したmaximumメソッドを末尾再帰になるように書き換えてください。
-1. 再帰を使って定義したsumメソッドを末尾再帰になるように書き換えてください。
-1. リストのtakeメソッドと同じことをするメソッドを末尾再帰で書いてください。
+1. 数値のリストを受け取って全ての要素の合計を返すsumメソッドを再帰を使って書いてください。
+1. sumメソッドを末尾再帰で書いてください。
 1. ソート済みの数値のリストから2分探索をするメソッドを書いてください。以下のようなシグニチャのメソッドです。
    
    ```scala
@@ -698,6 +701,8 @@ abstract class Shape {
 * `override`
 * `abstract`、`extends`
 * ケースクラス
+* 代数的データ型
+
 
 
 ## 要注意ポイント
@@ -705,6 +710,7 @@ abstract class Shape {
 * パターンマッチで条件分岐しつつ変数束縛ができる
 * String interpolationを使うと文字列結合をスッキリ書ける
 * ループ処理を再帰で書くと`var`をなくせる
+* 再帰はスタックオーバーフローが発生する危険があり、ループで書いたときよりパフォーマンスが落ちる可能性がある
 * 再帰処理にアキュムレータを導入することで末尾再帰に書き換えることができる
 * 末尾再帰はコンパイル時にループ処理に置き換えられる
 * 継承元のクラスが実装してるメソッドをオーバーライドするときは`override`をつける
