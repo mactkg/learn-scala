@@ -510,7 +510,7 @@ scala> def sumArea(xs: List[Shape]): Double = {
      |   }
      |   loop(xs, 0)
      | }
-scala> val xs = List(rec, circle, Rectangle(0, 0, 2, 4))
+scala> val xs = List(rec, circle, new Rectangle(0, 0, 2, 4))
 scala> sumArea(xs)
 ```
 
