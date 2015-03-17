@@ -583,6 +583,57 @@ res97: scala.collection.immutable.Map[String,Int] = Map(key1 -> 1, key2 -> 2)
 
 
 
+## 暗黙の型変換
+
+MapをつくるときMapのapplyメソッドを使いました。`Map(("key1", 1), ("key2", 2))`という風に使いますが、`Map("key1" -> 1, "key2" -> 2)`とも書けました。`("key1", 1)`というタプルの代わりに`"key1" -> 1`を指定しています。"key1"というStringの->メソッドを呼び出し、その結果がタプルになっていれば辻褄が合います。しかし、ScalaのStringはJavaのStringを使っていて、JavaのStringには->メソッドは存在しません。
+
+暗黙の型変換（implicit conversion）という仕組みを利用して、Stringに->メソッドがあるかのように振る舞わせることができます。
+
+例えば、数値に文字列を渡すと、数値の回数だけ渡された文字列を繰り返すrepeatというメソッドを、Intにつけたしてみましょう。`3.repeat("Hoge")`というように呼べたらOKです。
+
+まずは、RepeatorというIntとは別のクラスを作ってみます。
+
+```scala
+scala> class Repeator(x: Int) {
+     |   def repeat(s: String) = (0 until x).foldLeft("")((acc, a) => acc + s)
+     | }
+
+scala> new Repeator(3).repeat("Hoge")
+```
+
+次に、IntからRepeatorへの型変換を行うメソッドを定義してみましょう。
+
+```scala
+scala> def convert(x: Int): Repeator = new Repeator(x)
+scala> convert(3).repeat("Hoge")
+```
+
+型変換を行うメソッドを使ってInt型をRepeator型へ変換し、repeatメソッドを呼び出すことができました。この変換を暗黙的に行うことで`convert(3).repeat("Hoge")`を`3.repeat("Hoge")`と書けるようにします。暗黙の型変換を行うには、型変換を行うメソッドに`implicit`をつけます。
+
+```scala
+scala> implicit def convert(x: Int): Repeator = new Repeator(x)
+scala> 3.repeat("Hoge")
+```
+
+`3.repeat("HogeHoge")`と書くと、コンパイラはInt型のrepeatメソッドを探します。見つからないので暗黙の型変換を探し出し、`3`を`convert(3)`に置き換えます。`convert(3)`の結果はRepeatorオブジェクトなのでrepeatメソッドを呼び出すことができます。
+
+Mapで使った->メソッドも暗黙の型変換によって実現されています。`"key1" -> 1`と書くと暗黙の型変換によりStringである"key1"に->メソッドがあるかのように振る舞い、`("key1", 1)`というタプルを返します。この暗黙の型変換は、Predefというシングルトンオブジェクトに定義されています。ScalaではデフォルトでPredefシングルトンオブジェクトのメソッドをimportしています。
+
+Prefefには便利な暗黙の型変換が用意されています。 [Scala Predefオブジェクトメモ(Hishidama's Scala Predef Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/predef.html)
+
+このようにScalaでは暗黙の型変換を使うことで、既存のクラスを拡張できます。
+
+暗黙の型変換について、コップ本に注意点が書いてあります。
+
+> 暗黙の型変換の使い方を誤ると、クライアントコードを読みにくく理解しにくいものにしてしまう危険がある。暗黙の型変換はソースコードに明示的に書き出されるのではなく、コンパイラが暗黙のうちに適用するので、クライアントプログラマーからは、どのような暗黙の型変換が適用されているのかはっきりとはわからない。
+> （中略）
+> 簡潔さは読みやすさの大きな構成要素だが、簡潔すぎてわからないということもある。効果的な簡潔さをもたせて、わかりやすいクライアントコードを書けるライブラリーを設計すれば、クライアントプログラマーたちが生産的に仕事を進めるのを後押しできる。
+
+引用元：[Scalaスケーラブルプログラミング第2版](http://www.amazon.co.jp/Scala%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%96%E3%83%AB%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E7%AC%AC2%E7%89%88-Martin-Odersky/dp/4844330845/)
+
+
+
+
 ## 練習問題
 
 
