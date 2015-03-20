@@ -620,22 +620,12 @@ f: (x: Shape)String
 
 ## this
 
-図形の面積を比較するメソッドを追加してみましょう。これはどの図形でも同じ処理になるので、Shapeクラスに実装できそうです。
+図形を受け取り、自分の面積を比較して大きい方を返すメソッドをつくってみましょう。Scalaでは自分自身を表すオブジェクトが必要なときは、`this`を使います。
 
 ```scala
 abstract class Shape {
   def area: Double
-  def lessThan(a: Shape): Boolean = area < a.area
-}
-```
-
-次に、面積の大きい方のオブジェクトを返すmaxメソッドを定義しましょう。先ほどつくったlessThanメソッドを使って引数で指定された図形の方が大きければ引数で指定されたオブジェクトを、そうでなければ自分自身を返します。自分自身を表すオブジェクトが必要なときは、`this`を使います。
-
-```scala
-abstract class Shape {
-  def area: Double
-  def lessThan(a: Shape): Boolean = area < a.area
-  def max(a: Shape): Shape = if (lessThan(a)) a else this
+  def max(a: Shape): Shape = if (a.area > area) a else this
 }
 ```
 
