@@ -226,36 +226,6 @@ scala> List(8,2,6,9,8,3,5).sortWith(_ < _)
 res80: List[Int] = List(2, 3, 5, 6, 8, 8, 9)
 ```
 
-map、withFilter、flatMapはfor式でも同じことができると言いました。実際、Scalaではmap、filter、withFilter、flatMap、foreachメソッドをfor式で書くことができます。自分で定義した型でもこれらのメソッドを持っていればfor式で使えるのです。
-
-```scala
-case class Capsule[A](x: A) {
-  def map[B](f: A => B): Capsule[B] = Capsule(f(x))
-  def flatMap[B](f: A => Capsule[B]): Capsule[B] = f(x)
-}
-```
-
-普通にメソッドを呼び出してみましょう。
-
-```scala
-scala> Capsule(2).map(x => x * 5)
-res81: Capsule[Int] = Capsule(10)
-
-scala> Capsule(2).flatMap(x => Capsule(x * 5)).map(x => x + 3)
-res82: Capsule[Int] = Capsule(13)
-```
-
-for式で使ってみます。
-
-```scala
-scala> for (x <- Capsule(2);
-     |      y <- Capsule(x * 5))
-     |   yield y + 3
-res83: Capsule[Int] = Capsule(13)
-```
-
-ScalaのAPIドキュメントなどを読んでいてmap、filter、withFilter、flatMap、foreachなどを見つけたら注目しましょう。これらを使ってfor式で書いてるコードがあるかもしれないですし、自分で書くときもfor式を使うと読みやすくなるかもしれません。for式への置き換えについては、こちらのサイトに分かりやすく書いてあります -> [Scala for実体メモ(Hishidama's Scala for-convert Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/collection/for.html)
-
 
 
 ## ローンパターン
@@ -450,12 +420,30 @@ scala> def head[A](xs: List[A]): Option[A] = xs match {
 head: [A](xs: List[A])Option[A]
 
 scala> val xs = List(1,2,3)
-scala> head(xs)
-res34: Option[Int] = Some(1)
+scala> val res = head(xs)
+res: Option[Int] = Some(1)
+
+scala> res match {
+     |   case None    => "error"
+     |   case Some(x) => s.toString
+     | }
 
 scala> val xs = Nil
-scala> head(xs)
-res35: Option[Nothing] = None
+scala> val res = head(xs)
+res: Option[Nothing] = None
+
+scala> res match {
+     |   case None    => "error"
+     |   case Some(x) => s.toString
+     | }
+```
+
+Optionから結果を取り出すときはパターンマッチを使いましたが他にも色々あります。こちらの記事が参考になります -> [ScalaのOptionステキさについてアツく語ってみる - ( ꒪⌓꒪) ゆるよろ日記](http://yuroyoro.hatenablog.com/entry/20100710/1278763193)
+
+```scala
+scala> Some("ABC").getOrElse("DEFAULT")
+scala> Some("ABC").foreach(println(_))
+scala> Some("ABC").exits(_ == "AAA")
 ```
 
 Optionには、リストの高階メソッドで出てきたmapメソッドを持っています。
@@ -510,11 +498,62 @@ res59: Option[Int] = None
 
 2つ目と3つ目の結果がNoneになっています。しかし、Noneになった原因は異なります。2つ目は最初の`head(List(0,4))`の時点でNoneになり、計算全体としての結果がNoneになります。3つ目は`flatMap(div(6, _))`の時点でNoneになります。
 
-Optionは値を1つだけ入れられる入れ物のようですが、計算に失敗するかもしれないという文脈に入れていると捉えることもできます。パターンマッチを使うと失敗するかもしれない計算の結果を取得することができます。そして、map、filterWith、flatMapを使うことで、文脈から値を取り出すことなく文脈内の値を様々な関数に適用することができます。
+これらの高メソッドを使うことで、計算の途中結果がSomeなのかNoneなのか気にしなくてよくなり、パターンマッチを何度も書かなくて済みます。
 
-文脈から値を取りださずに計算できるので、計算の途中結果がSomeなのかNoneなのか気にしなくていいので、パターンマッチを何度も書かなくて済みます。
 
-map、filterWith、flatMapメソッドがあることがあるということは、Optionをfor式で使えるということですね。上の例をfor式で書き直してみましょう。
+
+## コレクション以外でもfor式
+
+リストのmap、withFilter、flatMapメソッドはfor式でも同じことができると言いました。実際、Scalaではmap、filter、withFilter、flatMap、foreachメソッドをfor式で書くことができます。
+
+自分で定義した型でもこれらのメソッドを持っていればfor式で使えるのです。
+
+```scala
+case class Capsule[A](x: A) {
+  def map[B](f: A => B): Capsule[B] = Capsule(f(x))
+  def flatMap[B](f: A => Capsule[B]): Capsule[B] = f(x)
+}
+```
+
+普通にメソッドを呼び出してみましょう。
+
+```scala
+scala> Capsule(2).map(x => x * 5)
+res81: Capsule[Int] = Capsule(10)
+
+scala> Capsule(2).flatMap(x => Capsule(x * 5)).map(x => x + 3)
+res82: Capsule[Int] = Capsule(13)
+```
+
+for式で使ってみます。
+
+```scala
+scala> for (x <- Capsule(2);
+     |      y <- Capsule(x * 5))
+     |   yield y + 3
+res83: Capsule[Int] = Capsule(13)
+```
+
+使えましたね。ScalaのAPIドキュメントなどを読んでいてmap、filter、withFilter、flatMap、foreachなどを見つけたら注目しましょう。これらを使ってfor式で書いてるコードがあるかもしれないですし、自分で書くときもfor式を使うと読みやすくなるかもしれません。for式への置き換えについては、こちらのサイトに分かりやすく書いてあります -> [Scala for実体メモ(Hishidama's Scala for-convert Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/collection/for.html)
+
+Optionにもmap、filterWith、flatMapメソッドがありました。つまり、Optionをfor式で使えるということですね。
+
+flatMapを使った例をもう一度見てみましょう。
+
+```scala
+scala> head(List(2,4)).flatMap(div(8, _)).withFilter(_ > 3).map(_ * 5)
+res57: Option[Int] = Some(20)
+
+scala> head(List(0,4)).flatMap(div(8, _)).withFilter(_ > 3).map(_ * 5)
+res58: Option[Int] = None
+
+scala> head(List(2,4)).flatMap(div(6, _)).withFilter(_ > 3).map(_ * 5)
+res59: Option[Int] = None
+```
+
+Optionは値を1つだけ入れられる入れ物のようですが、計算に失敗するかもしれないという文脈に入れていると捉えることもできます。map、filterWith、flatMapを使うことで、文脈から値を取り出すことなく文脈内の値を様々な関数に適用することができます。
+
+上の例をfor式で書き直してみましょう。
 
 ```scala
 scala> for(x <- head(List(2,4));
@@ -538,15 +577,13 @@ res64: Option[Int] = None
 
 for式で書いたものを上から順に読んでいくと、headの結果を`x`に代入して、`div(8, x)`を実行して結果を`y`に代入して・・・というように、手続き的に書いたプログラムのように読めます。forが関数の始まり、yieldがreturnだと考えると手続き的に書いた関数のようです。for式内でプログラミングしているようなものだと考えることもできるでしょう。計算の途中で再帰的なメソッドを使えばループ処理が書けますし、計算の途中結果がSomeなのかNoneなのかで分岐が書けます。そして、yieldで計算結果を返却してます。
 
-for式内でプログラミングできるとは、Optionという失敗するかもしれないという文脈内でプログラミングしているようなものです。失敗するかもしれない計算が続く場合、つまりflatMapが何回も続くような場合に、for式で書いた方が読みやすく感じるかもしれません。
+mapとflatMapがあればOption内にある値に対して色々な関数を適用でき、for式に置き換えることでそれが手続き的なプログラミングように見えます。
 
-Optionから結果を取り出すときはパターンマッチを使うと言いましたが他にもあります。こちらの記事が参考になります -> [ScalaのOptionステキさについてアツく語ってみる - ( ꒪⌓꒪) ゆるよろ日記](http://yuroyoro.hatenablog.com/entry/20100710/1278763193)
+Optionは値を1つだけ入れることができる入れ物だと捉えることもできるし、計算するかもしれないという文脈と捉えることもできると言いました。
 
-```scala
-scala> Some("ABC").getOrElse("DEFAULT")
-scala> Some("ABC").foreach(println(_))
-scala> Some("ABC").exits(_ == "AAA")
-```
+Optionを使ったfor式内でプログラミングできるということは、Optionという失敗するかもしれないという文脈内でプログラミングしているようなものです。失敗するかもしれない計算が続く場合、つまりflatMapが何回も続くような場合に、for式で書いた方が読みやすく感じるかもしれません。
+
+ScalaでmapとflatMapメソッド持つ型をモナドと呼んだりします。例えばOptionがモナドです。for式はコレクションのための構文ではなく、もっと抽象化されたモナドのための構文ということになります。モナドの厳密な話はできないのでここではしません。興味ある人は色々調べてみるとおもしろいと思います。参考資料を挙げておきます。 -> [モナドは象だ](https://dl.dropboxusercontent.com/u/261418/Monads_are_Elephants/index.html)
 
 
 
