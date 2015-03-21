@@ -335,11 +335,11 @@ def fact(n: Int, acc: BigInt = 1): BigInt = n match {
 
 maximumメソッドも末尾再帰に書き直してみましょう。
 
-```
+```scala
 def maximum(xs: List[Int]): Int = {
   def loop(xs: List[Int], acc: Int): Int = xs match {
     case Nil => throw new IllegalArgumentException
-    case x :: Nil => acc
+    case x :: Nil => if (x > acc) x else acc
     case x :: tail => loop(tail, if (x > acc) x else acc)
   }
   loop(xs, 0)
