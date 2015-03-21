@@ -21,26 +21,26 @@ res0: String = Sorry
 
 ```scala
 // head.scala
-def head(xs: List[Int]): Int = {
-  xs match {
-    case Nil       => throw new IllegalArgumentException
-    case x :: tail => x
+def head(list: List[Int]): Int = {
+  list match {
+    case Nil     => throw new IllegalArgumentException
+    case x :: xs => x
   }
 }
 ```
 
-`Nil`は空のリストでしたね。`case Nil` は`xs`が空のリストだったら、という意味です。このheadメソッドではエラーを発生させています（例外はいずれ・・・）。
+`Nil`は空のリストでしたね。`case Nil` は`list`が空のリストだったら、という意味です。このheadメソッドではエラーを発生させています（例外はいずれ・・・）。
 
-`case x :: tail` は`xs`が空じゃない場合にマッチしますが、マッチさせると同時に変数`x`に先頭要素を、変数`tail`に先頭を取り除いた残りのリストを代入します。
+`case x :: xs` は`list`が空じゃない場合にマッチしますが、マッチさせると同時に変数`x`に先頭要素を、変数`xs`に先頭を取り除いた残りのリストを代入します。
 
-`::`は前回cons演算子のところで値とリストをつなげるときに使っていました。パターンマッチのときでも同じような意味になります。`case x :: tail`というのは、パターンマッチの対象（`xs`）が`x`と`tail`をconsでつなげたものだったら、という意味になるわけです。`tail`は空のリストでもそうでなくても構いません、どちらにしろconsでつなげることができますからね。
+`::`は前回cons演算子のところで値とリストをつなげるときに使っていました。パターンマッチのときでも同じような意味になります。`case x :: xs`というのは、パターンマッチの対象（`list`）が`x`と`xs`をcons（`::`）でつなげたものだったら、という意味になるわけです。`xs`は空のリストでもそうでなくても構いません、どちらにしろconsでつなげることができますからね。
 
-`case x :: tail =>` というのは以下のように書いた場合と同じことをしてくれてると考えれば分かるのではないでしょうか。
+`case x :: xs =>` というのは以下のように書いた場合と同じことをしてくれてると考えれば分かるのではないでしょうか。
 
 ```scala
-case list => {
-  val x = list.head
-  val tail = list.tail
+case _ => {
+  val x  = list.head
+  val xs = list.tail
 }
 ```
 
@@ -63,11 +63,11 @@ java.lang.IllegalArgumentException
 
 ちゃんと動いてます。
 
-`tail`は`=>`の右側で使っていないので、`_`で置き換えてしまいましょう。置き換えなくてもいいですが、`_`で置き換えることで先頭要素以外は使ってないんだな、と分かりやすくなります。
+`xs`は`=>`の右側で使っていないので、`_`で置き換えてしまいましょう。置き換えなくてもいいですが、`_`で置き換えることで先頭要素以外は使ってないんだな、と分かりやすくなります。
 
 ```scala
-def head(xs: List[Int]): Int = {
-  xs match {
+def head(list: List[Int]): Int = {
+  list match {
     case Nil    => throw new IllegalArgumentException
     case x :: _ => x
   }
@@ -79,7 +79,7 @@ def head(xs: List[Int]): Int = {
 headメソッドは結局1つのmatch式で出来上がってます。1つの式からなるメソッドの場合、外側の`{}`はいらないので消してしまいましょう。
 
 ```scala
-def head(xs: List[Int]): Int = xs match {
+def head(list: List[Int]): Int = list match {
   case Nil => throw new IllegalArgumentException
   case x :: _ => x
 }
@@ -183,11 +183,11 @@ scala> maximum(xs)
 再帰とはメソッド内で自分自身を呼び出すことです。下のmaximumメソッドでは、メソッド本体で自分自身であるmaximumメソッドを呼び出しています。
 
 ```scala
-def maximum(xs: List[Int]): Int = xs match {
-  case Nil       => throw new IllegalArgumentException
-  case x :: Nil  => x
-  case x :: tail => {
-    val y = maximum(tail)
+def maximum(list: List[Int]): Int = list match {
+  case Nil      => throw new IllegalArgumentException
+  case x :: Nil => x
+  case x :: xs  => {
+    val y = maximum(xs)
     if (x > y) x else y
   }
 }
@@ -204,11 +204,11 @@ def maximum(xs: List[Int]): Int = xs match {
 リストの中に特定の要素が含まれているかを調べるメソッドを再帰で書いてみます。基底部を見極め、そして部分問題へと分割します。基底部は、Nilの場合です。部分問題への分割はリストのパターンマッチを使いましょう。
 
 ```scala
-def contains(a: Int, xs: List[Int]): Boolean = xs match {
-  case Nil       => false
-  case x :: tail =>
+def contains(list: List[Int], a: Int): Boolean = list match {
+  case Nil     => false
+  case x :: xs =>
     if (x == a) true
-    else        contains(a, tail)
+    else        contains(xs, a)
 }
 ```
 
@@ -233,12 +233,12 @@ def fact(n: Int): BigInt = n match {
 クイックソートを書いてみましょう。リストの要素のどれか1つをピボットとします。ピボットよりも小さい値のリストと大きい値のリストに分けてそれぞれソートします。それぞれソートした結果とピボットを結合すればソート済みのリストが手に入ります。簡単にするためにピボットは先頭要素で固定としましょう。
 
 ```scala
-def quickSort(xs: List[Int]): List[Int] = xs match {
-  case Nil       => Nil
-  case x :: Nil  => List(x)
-  case x :: tail => {
-    val smallerOrEqual = for (y <- tail; if y <= x) yield y
-    val larger         = for (y <- tail; if y > x) yield y
+def quickSort(list: List[Int]): List[Int] = list match {
+  case Nil      => Nil
+  case x :: Nil => List(x)
+  case x :: xs  => {
+    val smallerOrEqual = for (y <- xs; if y <= x) yield y
+    val larger         = for (y <- xs; if y > x ) yield y
     quickSort(smallerOrEqual) ++ List(x) ++ quickSort(larger)
   }
 }
@@ -336,13 +336,13 @@ def fact(n: Int, acc: BigInt = 1): BigInt = n match {
 maximumメソッドも末尾再帰に書き直してみましょう。
 
 ```scala
-def maximum(xs: List[Int]): Int = {
-  def loop(xs: List[Int], acc: Int): Int = xs match {
-    case Nil => throw new IllegalArgumentException
+def maximum(list: List[Int]): Int = {
+  def loop(list: List[Int], acc: Int): Int = list match {
+    case Nil      => throw new IllegalArgumentException
     case x :: Nil => if (x > acc) x else acc
-    case x :: tail => loop(tail, if (x > acc) x else acc)
+    case x :: xs  => loop(xs, if (x > acc) x else acc)
   }
-  loop(xs, 0)
+  loop(list, 0)
 }
 ```
 
@@ -456,10 +456,10 @@ class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
 Rectangleという型をクラスを使ってつくることができました。自分でつくった型のリストをつくったりももちろんできます。Rectangle型のリストを受け取って面積の合計を返すメソッドをつくって試してみましょう。
 
 ```scala
-scala> def sumArea(xs: List[Rectangle]): Double = {
-     |   def loop(xs: List[Rectangle], acc: Double): Double = xs match {
-     |     case Nil => acc
-     |     case x :: tail => loop(tail, acc + x.area)
+scala> def sumArea(list: List[Rectangle]): Double = {
+     |   def loop(list: List[Rectangle], acc: Double): Double = list match {
+     |     case Nil     => acc
+     |     case x :: xs => loop(xs, acc + x.area)
      |   }
      |   loop(xs, 0)
      | }
@@ -505,15 +505,15 @@ scala> circle.r
 Rectangle型とCircle型はShape型のサブ型なので、Shape型のオブジェクトとして扱うこともできます。
 
 ```scala
-scala> def sumArea(xs: List[Shape]): Double = {
-     |   def loop(xs: List[Shape], acc: Double): Double = xs match {
-     |     case Nil => acc
-     |     case x :: tail => loop(tail, x.area + acc)
+scala> def sumArea(list: List[Shape]): Double = {
+     |   def loop(list: List[Shape], acc: Double): Double = list match {
+     |     case Nil     => acc
+     |     case x :: xs => loop(xs, x.area + acc)
      |   }
-     |   loop(xs, 0)
+     |   loop(list, 0)
      | }
-scala> val xs = List(rec, circle, new Rectangle(0, 0, 2, 4))
-scala> sumArea(xs)
+scala> val ss = List(rec, circle, new Rectangle(0, 0, 2, 4))
+scala> sumArea(ss)
 ```
 
 
@@ -548,8 +548,8 @@ scala> rec.x1
 scala> rec == Rectangle(1, 2, 5, 6)
 scala> rec == Rectangle(3, 2, 5, 6)
 scala> val circle = new Circle(2, 4, 3)
-scala> val xs = List(rec, circle, Rectangle(0, 0, 2, 4))
-scala> sumArea(xs)
+scala> val ss = List(rec, circle, Rectangle(0, 0, 2, 4))
+scala> sumArea(ss)
 ```
 
 ケースクラスはパターンマッチできます。条件分岐しつつ変数束縛するってやつです。
@@ -642,7 +642,7 @@ abstract class Shape {
 1. ソート済みの数値のリストから2分探索をするメソッドを書いてください。以下のようなシグニチャのメソッドです。
    
    ```scala
-   def binarySearch(xs: List[Int], x: Int): Boolean
+   def binarySearch(list: List[Int], a: Int): Boolean
    ```
    
 1. 2分探索木をつくってみましょう。注意点があります。REPLに読み込むときは、:loadではなく:pasteで読み込んでください（:loadだとファイル単位でなく1行ずつ評価するため、この後の問題を解いてるとどこかでエラーになると思います）。
