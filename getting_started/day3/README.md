@@ -501,12 +501,12 @@ scala> opt match {
 2
 ```
 
-Optionは失敗することがあるかもしれない、という場合に使います。正常に計算できた場合はSomeを、失敗した場合はNoneを返すようなメソッドを定義します。そうするとメソッドの返り値の型がOptionであることから、このメソッドは失敗することがあるんだな、と分かります。
+Optionは値が存在しないかもしれない場合や、計算が失敗することがあるかもしれない、という場合に使います。正常に計算できた場合はSomeを、k結果が存在しない、もしくは計算に失敗した場合はNoneを返すようなメソッドを定義します。そうするとメソッドの返り値の型がOptionであることから、このメソッドは結果が存在しないことがあるんだな、と分かります。
 
 さっきつくったheadメソッドは、空のリストを渡すとエラーになってしまっていました。headメソッドの返り値の型をOption[A]にして、空のリストの場合はNoneを返すようにしましょう。空でない場合はSome[A]を返します。
 
 ```scala
-scala> def head[A](xs: List[A]): Option[A] = xs match {
+scala> def head[A](list: List[A]): Option[A] = list match {
      |   case Nil => None
      |   case x :: _ => Some(x)
      | }
@@ -579,19 +579,24 @@ res52: Option[Int] = None
 flatMapメソッドもあります。これはOptionを返すメソッドを複数個つなげたい場合に便利です。例えば、割り算をするメソッドを用意します。0で割ろうとした場合にNoneを返します。これをさっきのheadメソッドとつなげてみましょう。
 
 ```scala
+scala> def div(n: Int, d: Int): Option[Int] = if (d == 0) None else Some(n / d)
+
 scala> head(List(2,4)).flatMap(div(8, _)).withFilter(_ > 3).map(_ * 5)
 res57: Option[Int] = Some(20)
 
-scala> head(List(0,4)).flatMap(div(8, _)).withFilter(_ > 3).map(_ * 5)
+scala> head(List()).flatMap(div(8, _)).withFilter(_ > 3).map(_ * 5)
 res58: Option[Int] = None
 
-scala> head(List(2,4)).flatMap(div(6, _)).withFilter(_ > 3).map(_ * 5)
+scala> head(List(0,4)).flatMap(div(8, _)).withFilter(_ > 3).map(_ * 5)
 res59: Option[Int] = None
+
+scala> head(List(2,4)).flatMap(div(6, _)).withFilter(_ > 3).map(_ * 5)
+res60: Option[Int] = None
 ```
 
-2つ目と3つ目の結果がNoneになっています。しかし、Noneになった原因は異なります。2つ目は最初の`head(List(0,4))`の時点でNoneになり、計算全体としての結果がNoneになります。3つ目は`flatMap(div(6, _))`の時点でNoneになります。
+2つ目、3つ目、４つ目の結果がNoneになっています。しかし、Noneになった原因はそれぞれ異なります。2つ目は最初の`head(List())`の時点でNoneになり計算全体としての結果がNoneになります。3つ目は`flatMap(div(8, _)`の時点でNoneになります。3つ目は`withFilter(_ > 3)`の時点でNoneになります。
 
-これらの高メソッドを使うことで、計算の途中結果がSomeなのかNoneなのか気にしなくてよくなり、パターンマッチを何度も書かなくて済みます。
+これらの高階メソッドを使うことで、計算の途中結果がSomeなのかNoneなのか気にしなくてよくなり、パターンマッチを何度も書かなくて済みます。
 
 
 
@@ -629,19 +634,15 @@ res83: Capsule[Int] = Capsule(13)
 
 使えましたね。ScalaのAPIドキュメントなどを読んでいてmap、filter、withFilter、flatMap、foreachなどを見つけたら注目しましょう。これらを使ってfor式で書いてるコードがあるかもしれないですし、自分で書くときもfor式を使うと読みやすくなるかもしれません。for式への置き換えについては、こちらのサイトに分かりやすく書いてあります -> [Scala for実体メモ(Hishidama's Scala for-convert Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/collection/for.html)
 
-Optionにもmap、filterWith、flatMapメソッドがありました。つまり、Optionをfor式で使えるということですね。
+Optionにもmap、filterWith、flatMapメソッドがありました。つまり、Optionをfor式で使えるということです。
 
 flatMapを使った例をもう一度見てみましょう。
 
 ```scala
 scala> head(List(2,4)).flatMap(div(8, _)).withFilter(_ > 3).map(_ * 5)
-res57: Option[Int] = Some(20)
-
+scala> head(List()).flatMap(div(8, _)).withFilter(_ > 3).map(_ * 5)
 scala> head(List(0,4)).flatMap(div(8, _)).withFilter(_ > 3).map(_ * 5)
-res58: Option[Int] = None
-
 scala> head(List(2,4)).flatMap(div(6, _)).withFilter(_ > 3).map(_ * 5)
-res59: Option[Int] = None
 ```
 
 Optionは値を1つだけ入れられる入れ物のようですが、計算に失敗するかもしれないという文脈に入れていると捉えることもできます。map、filterWith、flatMapを使うことで、文脈から値を取り出すことなく文脈内の値を様々な関数に適用することができます。
@@ -653,30 +654,32 @@ scala> for(x <- head(List(2,4));
      |     y <- div(8, x);
      |     if (y > 3))
      |   yield y * 5
-res62: Option[Int] = Some(20)
+
+scala> for(x <- head(List());
+     |     y <- div(8, x);
+     |     if (y > 3))
+     |   yield y * 5
 
 scala> for(x <- head(List(0,4));
      |     y <- div(8, x);
      |     if (y > 3))
      |   yield y * 5
-res63: Option[Int] = None
 
 scala> for(x <- head(List(2,4));
      |     y <- div(6, x);
      |     if (y > 3))
      |   yield y * 5
-res64: Option[Int] = None
 ```
 
 for式で書いたものを上から順に読んでいくと、headの結果を`x`に代入して、`div(8, x)`を実行して結果を`y`に代入して・・・というように、手続き的に書いたプログラムのように読めます。forが関数の始まり、yieldがreturnだと考えると手続き的に書いた関数のようです。for式内でプログラミングしているようなものだと考えることもできるでしょう。計算の途中で再帰的なメソッドを使えばループ処理が書けますし、計算の途中結果がSomeなのかNoneなのかで分岐が書けます。そして、yieldで計算結果を返却してます。
 
-mapとflatMapがあればOption内にある値に対して色々な関数を適用でき、for式に置き換えることでそれが手続き的なプログラミングように見えます。
+OptionにmapとflatMapがあることで、Option内に格納されてる値に対して色々な関数を適用でき、for式に置き換えることでそれが手続き的なプログラミングように見えます。
 
-Optionは値を1つだけ入れることができる入れ物だと捉えることもできるし、計算するかもしれないという文脈と捉えることもできると言いました。
+Optionは値を1つだけ入れることができる入れ物だと捉えることもできるし、計算に失敗するかもしれないという文脈と捉えることもできると言いました。Optionを使ったfor式内でプログラミングできるということは、Optionという失敗するかもしれないという文脈内でプログラミングしているようなものです。
 
-Optionを使ったfor式内でプログラミングできるということは、Optionという失敗するかもしれないという文脈内でプログラミングしているようなものです。失敗するかもしれない計算が続く場合、つまりflatMapが何回も続くような場合に、for式で書いた方が読みやすく感じるかもしれません。
+失敗するかもしれない計算が続く場合、つまりflatMapが何回も続くような場合に、for式で書いた方が読みやすく感じるかもしれません。
 
-ScalaでmapとflatMapメソッド持つ型をモナドと呼んだりします。例えばOptionがモナドです。for式はコレクションのための構文ではなく、もっと抽象化されたモナドのための構文ということになります。モナドの厳密な話はできないのでここではしません。興味ある人は色々調べてみるとおもしろいと思います。参考資料を挙げておきます。 -> [モナドは象だ](https://dl.dropboxusercontent.com/u/261418/Monads_are_Elephants/index.html)
+ScalaでmapとflatMapメソッド持つ型をモナドと呼んだりします。例えばOptionがモナドです。for式はコレクションのための構文ではなく、もっと抽象化されたモナドのための構文ということになります。モナドの厳密な話はできないのでここではしません（知識が足りないです、ごめんなさい・・・）。興味ある人は色々調べてみるとおもしろいと思います。参考資料を挙げておきます。 -> [モナドは象だ](https://dl.dropboxusercontent.com/u/261418/Monads_are_Elephants/index.html)
 
 
 
@@ -719,37 +722,86 @@ MapをつくるときMapのapplyメソッドを使いました。`Map(("key1", 1
 
 暗黙の型変換（implicit conversion）という仕組みを利用して、Stringに->メソッドがあるかのように振る舞わせることができます。
 
-例えば、数値に文字列を渡すと、数値の回数だけ渡された文字列を繰り返すrepeatというメソッドを、Intにつけたしてみましょう。`3.repeat("Hoge")`というように呼べたらOKです。
-
-まずは、RepeatorというIntとは別のクラスを作ってみます。
+まず、暗黙の型変換とはなんでしょうか。Day2で出てきたRectangle型を思い出しましょう。
 
 ```scala
-scala> class Repeator(x: Int) {
+scala> case class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double)
+scala> val rec = Rectangle(0, 0, 2, 3)
+```
+
+Rectangleケースクラスは、Double型の値を4つ受け取る定義ですが、インスタンス化するときにInt型の値を指定しています。Int型の値を指定してるのにコンパイルが通るのは、暗黙の型変換によりInt型がDouble型に変換されてるためです。
+
+Rectangleケースクラスに、Rectangle型の値を受け取り、自分自身と面積を比べて大きい方を返すmaxメソッドを追加してみます。
+
+```scala
+scala> case class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
+     |   val area = math.abs(x2 - x1) * math.abs(y2 - y1)
+     |   def max(a: Rectangle): Rectangle = if (a.area > this.area) a else this
+     | }
+
+scala> val rec = Rectangle(0, 0, 2, 3)
+scala> rec.max(Rectangle(0, 0, 1, 2))
+```
+
+4要素のタプルをmaxメソッドに渡してみましょう。
+
+```scala
+scala> rec.max((0, 0, 1, 2))
+<console>:11: error: type mismatch;
+ found   : (Int, Int, Int, Int)
+ required: Rectangle
+              rec.max((0, 0, 1, 2))
+                      ^
+```
+
+当然コンパイルエラーになりますね。ここで、Int型が4つのタプルを、Rectangle型へ変換するメソッドをつくってみます。
+
+```scala
+scala> def toRectangle(t: (Int, Int, Int, Int)): Rectangle = Rectangle(t._1, t._2, t._3, t._4)
+scala> rec.max(toRectangle(0, 0, 1, 2))
+```
+
+この`toRectangle(0, 0, 1, 2)`というメソッド呼び出しを暗黙的に実行させ、暗黙の型変換を行うようにします。暗黙の型変換は、変換処理を行うメソッドに`implicit`をつけます。
+
+```scala
+scala> implicit def toRectangle(t: (Int, Int, Int, Int)): Rectangle = Rectangle(t._1, t._2, t._3, t._4)
+scala> rec.max((0, 0, 1, 2))
+```
+
+4要素のタプルをRectangle型へ変換を行う暗黙の型変換を定義できました。
+
+暗黙の型変換を使うと、元々存在している型にメソッドを追加することができます。
+
+例えば、数値に文字列を渡すと、数値の回数だけ渡された文字列を繰り返すrepeatというメソッドを、Intにつけ足してみましょう。`3.repeat("Hoge")`というように呼べたらOKです。
+
+まずは、RepeatorというIntとは別のクラスを作ってみましょう。
+
+```scala
+scala> class Repeater(x: Int) {
      |   def repeat(s: String) = (0 until x).foldLeft("")((acc, a) => acc + s)
      | }
 
-scala> new Repeator(3).repeat("Hoge")
+scala> new Repeater(3).repeat("hogehoge")
 ```
 
-次に、IntからRepeatorへの型変換を行うメソッドを定義してみましょう。
+`new Repeator(3)`というのを暗黙的に行うようにします。クラスに`implicit`をつけます。
 
 ```scala
-scala> def convert(x: Int): Repeator = new Repeator(x)
-scala> convert(3).repeat("Hoge")
+scala> implicit class Repeater(x: Int) {
+     |   def repeat(s: String) = (0 until x).foldLeft("")((acc, a) => acc + s)
+     | }
+defined class Repeater
+
+scala> 3.repeat("hogehoge")
 ```
 
-型変換を行うメソッドを使ってInt型をRepeator型へ変換し、repeatメソッドを呼び出すことができました。この変換を暗黙的に行うことで`convert(3).repeat("Hoge")`を`3.repeat("Hoge")`と書けるようにします。暗黙の型変換を行うには、型変換を行うメソッドに`implicit`をつけます。
+Int型に新たにrepeatメソッドをつけ足すことができました。クラスに`implicit`をつけるやり方はScala2.10以降にできるようになりました。それ以前はPimp My Libraryと呼ばれるパターンが使われていました。参考サイト -> [Scala 2.10.0 M3の新機能を試してみる(2) - SIP-13 - Implicit classes](http://kmizu.hatenablog.com/entry/20120506/1336302407)
 
-```scala
-scala> implicit def convert(x: Int): Repeator = new Repeator(x)
-scala> 3.repeat("Hoge")
-```
+`implicit class`をつけた方法は毎回Repeaterクラスをnewしてしまいます。AnyValを継承すると効率を上げることができます。こちらを参考してください。[Scalaメソッド定義メモ(Hishidama's Scala def Memo) # 暗黙クラス（implicit class）](http://www.ne.jp/asahi/hishidama/home/tech/scala/def.html#h_implicit_class)
 
-`3.repeat("HogeHoge")`と書くと、コンパイラはInt型のrepeatメソッドを探します。見つからないので暗黙の型変換を探し出し、`3`を`convert(3)`に置き換えます。`convert(3)`の結果はRepeatorオブジェクトなのでrepeatメソッドを呼び出すことができます。
+Mapで使った->メソッドも暗黙の型変換によって実現されています。`"key1" -> 1`と書くと暗黙の型変換によりStringである"key1"に->メソッドがあるかのように振る舞い、`("key1", 1)`というタプルを返します。
 
-Mapで使った->メソッドも暗黙の型変換によって実現されています。`"key1" -> 1`と書くと暗黙の型変換によりStringである"key1"に->メソッドがあるかのように振る舞い、`("key1", 1)`というタプルを返します。この暗黙の型変換は、Predefというシングルトンオブジェクトに定義されています。ScalaではデフォルトでPredefシングルトンオブジェクトのメソッドをimportしています。
-
-Prefefには便利な暗黙の型変換が用意されています。 [Scala Predefオブジェクトメモ(Hishidama's Scala Predef Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/predef.html)
+この暗黙の型変換は、Predefというシングルトンオブジェクトに定義されています。ScalaではデフォルトでPredefシングルトンオブジェクトのメソッドをimportしています。シングルトンオブジェクトが何かは次回やります。ここではいくつかの暗黙の型変換メソッドがデフォルトで用意されている、ということを分かってください。Prefefには便利な暗黙の型変換が用意されています。 [Scala Predefオブジェクトメモ(Hishidama's Scala Predef Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/predef.html)
 
 このようにScalaでは暗黙の型変換を使うことで、既存のクラスを拡張できます。
 
