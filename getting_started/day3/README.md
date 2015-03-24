@@ -105,6 +105,42 @@ res2: Int = 20
 
 関数を定義し、関数で定義した処理を実行することができました。
 
+関数をつくる方法は関数リテラルの他に、メソッドに部分適用をする方法があります。例えば、`2 + 3`というのはInt型の+メソッドを呼び出していました。この+メソッドから、「2を加算する関数」をつくってみます。メソッドを呼び出すときに具体的な値を指定する代わりに、`_`を指定することで部分適用することができます。
+
+```scala
+scala> val f = 2.+(_: Int)
+scala> f(3)
+
+scala> val f = 2 + (_: Int)
+scala> f(3)
+
+scala> val f: (Int) => Int = 2 + _
+scala> f(3)
+```
+
+部分適用するときは、型を明示的に指定する必要があります。型を明示的に指定するのは、`_`の型でも良いし、`f`の型でも良いです。
+
+メソッドのレシーバーも`_`で置き換えることができます（これを部分適用と呼ぶかどうか分からないです、ごめんなさい・・・）。この場合は2つの引数を受け取ることになります。1つめの引数がレシーバーで、2つめの引数が+メソッドの引数になります。
+
+```scala
+scala> val f: (Int, Int) => Int = _ + _
+```
+
+3つの引数を受け取るsumメソッドをつくってみましょう。部分適用もしてみます。
+
+```scala
+scala> def sum(a: Int, b: Int, c: Int) = a + b + c
+scala> val f: (Int) => Int = sum(_, 1, 2)
+scala> val f: (Int, Int) => Int = sum(_, _, 2)
+scala> val f: (Int, Int, Int) => Int = sum(_, _, _)
+```
+
+全ての引数を`_`で指定する場合は、`()`ごと`_`で置き換えることで短く書けます。
+
+```scala
+scala> val f: (Int, Int, Int) => Int = sum _
+```
+
 
 
 ## コレクションの高階メソッド
@@ -116,25 +152,37 @@ res2: Int = 20
 
 ```scala
 scala> val cs = ('A' to 'Z')
-scala> cs.foreach((c: Char) => println("Hello, " + c))
+scala> cs.foreach((c: Char) => println(c))
 ```
 
 csがCharのコレクションなので、関数の引数であるcがCharであることはScalaが推論できます。なので、cの型は省略できます。
 
 ```scala
-scala> cs.foreach((c) => println("Hello, " + c))
+scala> cs.foreach((c) => println(c))
 ```
 
 関数の引数が1つの場合は`()`も省略できます。
 
 ```scala
-scala> cs.foreach(c => println("Hello, " + c))
+scala> cs.foreach(c => println(c))
 ```
 
-さらに、引数を1回しか使っていない場合はもっと短く書くことができます。`c => println("Hello, " + c)` が `_ => println("Hello, " + _)` になって、さらに `println("Hello, " + _)` になる、といったイメージです。
+さらに、printlnに部分適用することで、`A => Unit` 型の関数をつくれるため、関数リテラルを使う必要もないです。
 
 ```scala
-scala> cs.foreach(println("Hello, " + _))
+scala> cs.foreach(println(_))
+```
+
+全ての引数を部分適用することになるので、`()`ごと`_`で置き換えても同じです。
+
+```scala
+scala> cs.foreach(println _)
+```
+
+さらに、`()`ごと`_`で置き換えてつくった関数を別のメソッドに渡すとき、`_`自体を省略することが可能です。
+
+```scala
+scala> cs.foreach(println)
 ```
 
 だいぶすっきりしますね。
