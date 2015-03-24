@@ -187,25 +187,24 @@ scala> cs.foreach(println)
 
 だいぶすっきりしますね。
 
-次は、mapメソッドを使ってみます。mapメソッドは、引数で受け取った関数にコレクションそれぞれの要素を適用した結果からなる新たなコレクションを作ります。mapに渡せる関数の型は A => B となります。
+次は、mapメソッドを使ってみます。mapメソッドは、引数で受け取った関数にコレクションそれぞれの要素を適用した結果からなる新たなコレクションを作ります。mapに渡せる関数の型は `A => B` 型となります。
 
 ```scala
 scala> val xs = (1 to 10)
 scala> xs.map((x: Int) => x * 2)
 ```
 
-このmapメソッド。あるコレクションを別のコレクションに変換します。これってどこかで聞き覚えないですか？そうです、前回やったfor式ですね。上のmapを使った例はfor式でも書けますね。
+このmapメソッド。あるコレクションを別のコレクションに変換します。これってどこかで聞き覚えないですか？そうです、Day1でやったfor式です。上のmapを使った例はfor式でも書けますね。
 
 ```scala
 scala> for(x <- xs) yield x * 2
 ```
 
-どちらを使っても同じことができます。どちらを使うべきかというのは現時点では特にないので読みやすいを使えばいいかと思います。
+どちらを使っても同じことができます。どちらを使うべきかというのは特にないので読みやすいを使えばいいかと思います。
 
-foreach、 mapの他に、filterという高階メソッドがあります。filterにはBooleanを返す関数を渡すことができます。Booleanを返す関数のことを「述語」と呼んだりします。述語関数に各要素を適用した結果がtrueになる要素のみからなるコレクションを取得できます。filterに渡せる関数の型は A => Boolean です。ちなみに、Booleanを返す関数を述語と呼びます。
+foreach、 mapの他に、filterという高階メソッドがあります。filterにはBooleanを返す関数を渡すことができます。Booleanを返す関数のことを「述語」と呼んだりします。述語関数に各要素を適用した結果がtrueになる要素のみからなるコレクションを取得できます。filterに渡せる関数の型は `A => Boolean` 型です。
 
 ```scala
-scala> xs.filter((x: Int) => x > 6)
 scala> xs.filter(x => x > 6)
 scala> xs.filter(_ > 6)
 ```
@@ -223,11 +222,18 @@ scala> xs.withFilter(_ > 6).map(_ * 2)
 scala> for(x <- xs; if x > 6) yield x * 2
 ```
 
-もう1つ、flatMapメソッドを見てみましょう。flatMapはmapと同じように値変換するような感じなのですが、ちょっと違います。flatMapに渡す変換のための関数ではコレクションを返す必要があるのです。flatMapはコレクションを返す関数に各要素を適用した結果、複数のコレクションが手に入るのでそれらを結合します。flatMapに渡せる関数の型は A => List[B] となります。
+もう1つ、flatMapメソッドを見てみましょう。flatMapはmapと同じように値変換するような感じなのですが、ちょっと違います。flatMapに渡す変換のための関数では、コレクションを返す必要があるのです。flatMapに渡せる関数の型は `A => List[B]` 型となります。
 
 ```scala
-scala> List(1,2,3,4).flatMap((a: Int) => 1 to a)
 scala> List(1,2,3,4).flatMap(a => 1 to a)
+scala> List(1,2,3,4).flatMap(1 to _)
+```
+
+仮にコレクションを返す関数をmapに渡すと入れ子のコレクションが出来上がるでしょう。入れ子のリストを解消するにはflattenメソッドを使います。flatMapは、map+flattenを行った結果と同じになります。
+
+```scala
+scala> List(1,2,3,4).map(1 to _)
+scala> List(1,2,3,4).map(1 to _).flatten
 scala> List(1,2,3,4).flatMap(1 to _)
 ```
 
@@ -236,15 +242,32 @@ scala> List(1,2,3,4).flatMap(1 to _)
 例えば前回の練習問題で三角形を3要素のタプルで表現するのがありました。for式、flatMap、両方を使った場合はこうなります。
 
 ```scala
-scala> for(c <- 1 to 10; a <- 1 to c; b <- 1 to a) yield (a,b,c)
-scala> (1 to 10).flatMap(c => (1 to c).flatMap(a => (1 to a).map(b => (a,b,c))))
+scala> for (c <- 1 to 10;
+     |      a <- 1 to c;
+     |      b <- 1 to a)
+     |   yield (a,b,c)
+
+scala> (1 to 10).flatMap {
+     |   c => (1 to c).flatMap {
+     |     a => (1 to a).map(b => (a,b,c))
+     |   }
+     | }
 ```
 
 直角三角形だけを抽出したい場合はこうなります。
 
 ```scala
-scala> for(c <- 1 to 10; a <- 1 to c; b <- 1 to a; if c*c == a*a + b*b) yield (a,b,c)
-scala> (1 to 10).flatMap(c => (1 to c).flatMap(a => (1 to a).withFilter(b => c*c == a*a + b*b).map(b => (a,b,c))))
+scala> for (c <- 1 to 10;
+     |      a <- 1 to c;
+     |      b <- 1 to a;
+     |      if c*c == a*a + b*b)
+     |   yield (a,b,c)
+
+scala> (1 to 10).flatMap {
+     |   c => (1 to c).flatMap {
+     |     a => (1 to a).withFilter(b => c*c == a*a + b*b).map(b => (a,b,c))
+     |   }
+     | }
 ```
 
 うーん、これはfor式を使った方が見やすい気がしますね。
