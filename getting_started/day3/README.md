@@ -332,11 +332,11 @@ def writeTo(fileName: String, body: String): Unit = {
 }
 ```
 
-ファイル入出力はJavaのjava.nio.file.Filesクラスなどを使います。クラス名より前の部分"java.nio.file"の部分をパッケージと言います。これは名前空間で、同じクラス名でも別パッケージであれば定義できるようnなっています（例えば、hoge.FilesクラスをつくってもOK）。上の例だとFilesとPathsがjava.nio.fileパッケージなのですが、パッケージ名から書くのは大変です。こういうときは`import`でパッケージを指定すると、指定したパッケージ内のクラスはクラス名だけで使うことができるようになります。
+Scalaの標準ライブラリにはファイル書き込みを行うクラスが用意されておらず、ライブラリを使用しない場合はJavaのjava.nio.file.Filesクラスなどを使います。クラス名より前の部分"java.nio.file"の部分をパッケージと言います。これは名前空間で、同じクラス名でも別パッケージであれば定義できるようになっています（例えば、hoge.FilesクラスをつくってもOK）。上の例だとFilesとPathsがjava.nio.fileパッケージなのですが、パッケージ名から書くのは大変です。こういうときは`import`でパッケージを指定すると、指定したパッケージ内のクラスはクラス名だけで使うことができるようになります。
 
 注目したいのは`try { } finally { }`の部分です。`try { }`で囲まれたコードでエラーが発生しても`finally { }`で囲まれたコードが実行されます。エラーが発生しなくても`finally { }`で囲まれた部分は実行されます。ファイルのクローズのようにエラーが発生しようがしまいが必ず実行したいコードは`finally { }`で囲みます。
 
-ファイルの書き込み処理を行う箇所では、この`try { } finally { }`を書く必要があります。都度書いているとDRYではなくなります。こういう場合に便利なのがローンパターンと呼ばれる方法です。`try { } finally { }`という構造を別メソッドで定義し、`try { }`で囲みたい処理は、java.io.Writer => Any という型の関数で渡してあげるようにします。
+ファイルの書き込み処理を行う箇所では、この`try { } finally { }`を書く必要があります。都度書いているとDRYではなくなります。こういう場合に便利なのがローンパターンと呼ばれる方法です。`try { } finally { }`という構造を別メソッドで定義し、`try { }`で囲みたい処理は、`java.io.Writer => Any` 型の関数で渡してあげるようにします。
 
 ```scala
 import java.nio.file._
@@ -351,11 +351,13 @@ def using(fileName: String, f: java.io.Writer => Any): Unit = {
 }
 
 def writeTo(fileName: String, body: String): Unit = {
-  using(fileName, (writer) => writer.write(body))
+  using(fileName, (writer) => {
+    writer.write(body)
+  })
 }
 ```
 
-これでファイルを書き込むときはusingメソッドを使えばよく、`try { } finally { }`をいろんなところに書く必要はなくなりました。ローンパターンの実装についてこちらに色々載ってます -> [Scala using(Hishidama's Scala loan-pattern Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/sample/using.html)
+これでファイルを書き込むときはusingメソッドを使えばよく、`try { } finally { }`をいろんなところに書く必要はなくなりました。リソースのオープン・クローズはusingメソッド内で行うことで、usingメソッドを使う人はリソースのオープン・クローズを気にしなくてよくなります。このようにオープンしたリソースを関数に貸し出すような動きをするのでローンパターンと呼ばれているようです。ローンパターンの実装についてこちらに色々載ってます -> [Scala using(Hishidama's Scala loan-pattern Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/sample/using.html)
 
 
 
@@ -372,7 +374,9 @@ def using(fileName: String)(f: java.io.Writer => Any): Unit = {
 
 ```scala
 def writeTo(fileName: String, body: String): Unit = {
-  using(fileName)((writer) => writer.write(body))
+  using(fileName)((writer) => {
+    writer.write(body)
+  })
 }
 ```
 
@@ -380,13 +384,11 @@ def writeTo(fileName: String, body: String): Unit = {
 
 ```scala
 def writeTo(fileName: String, body: String): Unit = {
-  using(fileName) {
-    writer => writer.write(body)
+  using(fileName) { writer =>
+    writer.write(body)
   }
 }
 ```
-
-このように言語を拡張していける柔軟性がScalaの特徴の1つです。
 
 
 
