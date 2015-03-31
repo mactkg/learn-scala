@@ -649,7 +649,7 @@ scala> head(List(2,4)).flatMap(div(6, _)).withFilter(_ > 3).map(_ * 5)
 
 Optionは値を1つだけ入れられる入れ物のようですが、計算に失敗するかもしれないという文脈に入れていると捉えることもできます。map、filterWith、flatMapを使うことで、文脈から値を取り出すことなく文脈内の値を様々な関数に適用することができます。
 
-上の例をfor式で書き直してみましょう。
+上の例をfor式で書き直してみましょう。for式の1番外側の括弧は`{}`で書くこともできます。
 
 ```scala
 scala> for(x <- head(List(2,4));
@@ -657,20 +657,23 @@ scala> for(x <- head(List(2,4));
      |     if (y > 3))
      |   yield y * 5
 
-scala> for(x <- head(List());
-     |     y <- div(8, x);
-     |     if (y > 3))
-     |   yield y * 5
+scala> for {
+     |   x <- head(List());
+     |   y <- div(8, x);
+     |   if (y > 3)
+     | } yield y * 5
 
-scala> for(x <- head(List(0,4));
-     |     y <- div(8, x);
-     |     if (y > 3))
-     |   yield y * 5
+scala> for {
+     |   x <- head(List(0,4));
+     |   y <- div(8, x);
+     |   if (y > 3)
+     | } yield y * 5
 
-scala> for(x <- head(List(2,4));
-     |     y <- div(6, x);
-     |     if (y > 3))
-     |   yield y * 5
+scala> for {
+     |   x <- head(List(2,4));
+     |   y <- div(6, x);
+     |   if (y > 3)
+     | } yield y * 5
 ```
 
 for式で書いたものを上から順に読んでいくと、headの結果を`x`に代入して、`div(8, x)`を実行して結果を`y`に代入して・・・というように、手続き的に書いたプログラムのように読めます。forが関数の始まり、yieldがreturnだと考えると手続き的に書いた関数のようです。for式内でプログラミングしているようなものだと考えることもできるでしょう。計算の途中で再帰的なメソッドを使えばループ処理が書けますし、計算の途中結果がSomeなのかNoneなのかで分岐が書けます。そして、yieldで計算結果を返却してます。
