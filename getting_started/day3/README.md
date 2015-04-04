@@ -442,7 +442,40 @@ scala> val sum = List(1,2,3,4,5).foldLeft(0)(_ + _)
 sum: Int = 15
 ```
 
-このようにリストを先頭とそれ以外のリストに分割するような再帰を畳み込みで実現できました。
+このようにリストを先頭とそれ以外のリストに分割するような再帰を畳み込みで実現できました。この式がどのように評価されるのかイメージしてみましょう。
+
+```scala
+List(1,2,3,4,5).foldLeft(0)((acc, x) => acc + x)
+(0 + 1) + List(2,3,4,5).foldLeft(0)((acc, x) => acc + x)
+((0 + 1) + 2) + List(3,4,5).foldLeft(0)((acc, x) => acc + x)
+(((0 + 1) + 2) + 3) + List(4,5).foldLeft(0)((acc, x) => acc + x)
+((((0 + 1) + 2) + 3) + 4) + List(5).foldLeft(0)((acc, x) => acc + x)
+(((((0 + 1) + 2) + 3) + 4) + 5) + List().foldLeft(0)((acc, x) => acc + x)
+(((((0 + 1) + 2) + 3) + 4) + 5)
+15
+```
+
+アキュムレータを1番左端として左側に畳込むように評価するのでfoldLeftを使った処理は左畳み込みと呼ばれます。
+
+逆にfoldRightを使った場合は右畳み込みとなります。
+
+```scala
+scala> val sum = List(1,2,3,4,5).foldLeft(0)(_ + _)
+sum: Int = 15
+```
+
+右畳み込みをイメージしてみましょう。
+
+
+```scala
+List(1,2,3,4,5).foldRight(0)((acc, x) => acc + x)
+1 + List(2,3,4,5).foldRight(0)((acc, x) => acc + x)
+1 + (2 + List(3,4,5).foldRight(0)((acc, x) => acc + x))
+1 + (2 + (3 + List(4,5).foldRight(0)((acc, x) => acc + x)))
+1 + (2 + (3 + (4 + List(5).foldRight(0)((acc, x) => acc + x))))
+1 + (2 + (3 + (4 + (5 + List().foldRight(0)((acc, x) => acc + x)))))
+1 + (2 + (3 + (4 + (5 + 0))))
+```
 
 先ほど出てきたmapメソッドと同じことを畳み込みを使って実装してみましょう。アキュムレータは空のリストになります。
 
@@ -463,11 +496,47 @@ xs: List[Int] = List(2, 4, 6, 8, 10)
 
 mapと同じ動きができました。リストの++メソッドによる連結は問題があります。計算速度が、++メソッドのレシーバであるリストの長さに依存しており、長いリストに対してこの処理を行うと遅くなります。
 
+上のfoldLeftを使った式がどのように評価されるのかイメージしてみましょう。
+
+```scala
+List(1,2,3,4,5).foldLeft(Nil)((acc, x) => acc ++ List(x * 2))
+(Nil ++ List(1 * 2)) ++ List(2,3,4,5).foldLeft(Nil)((acc, x) => acc ++ List(x * 2))
+((Nil ++ List(1 * 2)) ++ List(2 * 2)) ++ List(3,4,5).foldLeft(Nil)((acc, x) => acc ++ List(x * 2))
+(((Nil ++ List(1 * 2)) ++ List(2 * 2)) ++ List(3 * 2)) ++ List(4,5).foldLeft(Nil)((acc, x) => acc ++ List(x * 2))
+((((Nil ++ List(1 * 2)) ++ List(2 * 2)) ++ List(3 * 2)) ++ List(4 * 2)) ++ List(5).foldLeft(Nil)((acc, x) => acc ++ List(x * 2))
+(((((Nil ++ List(1 * 2)) ++ List(2 * 2)) ++ List(3 * 2)) ++ List(4 * 2)) ++ List(5 * 2)) ++ List().foldLeft(Nil)((acc, x) => acc ++ List(x * 2))
+Nil ++ List(2) ++ List(4) ++ List(6) ++ List(8) ++ List(10)
+List(2) ++ List(4) ++ List(6) ++ List(8) ++ List(10)
+List(2, 4) ++ List(6) ++ List(8) ++ List(10)
+List(2, 4, 6) ++ List(8) ++ List(10)
+List(2, 4, 6, 8) ++ List(10)
+List(2,4,6,8,10)
+```
+
+++メソッドのレシーバーがどんどん大きくなっていくのが分かりますね。
+
 こういう場合はfoldRightによる右畳み込みが使えます。右畳み込みはレシーバであるリストの右から順番に処理します。そのため、++メソッドよりも効率よく処理できる::メソッドを使うことができます。foldRightの引数は (B)((A, B) => B) という感じです。アキュムレータの型がBで、関数がリストの要素とアキュムレータを受け取るため `(A, B) => B` 型となります。
 
 ```scala
 scala> val xs = List(1,2,3,4,5).foldRight(Nil: List[Int])((x, acc) => (x * 2) :: acc)
 xs: List[Int] = List(2, 4, 6, 8, 10)
+```
+
+右畳み込みを使った式がどのように評価されるのかイメージしてみましょう。
+
+```scala
+(1 * 2) :: List(1,2,3,4,5).foldRight(Nil: List[Int])((x, acc) => (x * 2) :: acc)
+(1 * 2) :: ((2 * 2) :: List(3,4,5).foldRight((2 * 2) :: Nil)((x, acc) => (x * 2) :: acc))
+(1 * 2) :: ((2 * 2) :: ((3 * 2) :: List(4,5).foldRight((2 * 2) :: Nil)((x, acc) => (x * 2) :: acc)))
+(1 * 2) :: ((2 * 2) :: ((3 * 2) :: ((4 * 2) :: List(5).foldRight((2 * 2) :: Nil)((x, acc) => (x * 2) :: acc))))
+(1 * 2) :: ((2 * 2) :: ((3 * 2) :: ((4 * 2) :: ((5 * 2) :: List().foldRight((2 * 2) :: Nil)((x, acc) => (x * 2) :: acc)))))
+(1 * 2) :: ((2 * 2) :: ((3 * 2) :: ((4 * 2) :: ((5 * 2) :: Nil))))
+2 :: (4 :: (6 :: (8 :: (10 :: Nil))))
+2 :: (4 :: (6 :: (8 :: List(10))))
+2 :: (4 :: (6 :: List(8, 10)))
+2 :: (4 :: List(6, 8, 10))
+2 :: List(4, 6, 8, 10)
+List(2, 4, 6, 8, 10)
 ```
 
 
