@@ -681,7 +681,7 @@ Optionは値を1つだけ入れることができる入れ物だと捉えるこ�
 
 失敗するかもしれない計算が続く場合、つまりflatMapが何回も続くような場合に、for式で書いた方が読みやすく感じるかもしれません。
 
-ScalaでmapとflatMapメソッド持つ型をモナドと呼んだりします。例えばOptionがモナドです。for式はコレクションのための構文ではなく、もっと抽象化されたモナドのための構文ということになります。モナドの厳密な話はできないのでここではしません（知識が足りないです、ごめんなさい・・・）。興味ある人は色々調べてみるとおもしろいと思います。参考資料を挙げておきます。 -> [モナドは象だ](https://dl.dropboxusercontent.com/u/261418/Monads_are_Elephants/index.html)
+ScalaでmapとflatMapメソッド持つ型をモナドと呼んだりします。例えばOptionがモナドです。for式はコレクションのための構文ではなく、もっと抽象化されたモナドのための構文ということになります。モナドの厳密な話はできないのでここではしません（知識が足りないです、ごめんなさい・・・）。興味ある人は色々調べてみるとおもしろいと思います。この本が良いと思います。[Scala関数型デザイン&プログラミング](http://www.amazon.co.jp/Scala%E9%96%A2%E6%95%B0%E5%9E%8B%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3-%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E2%80%95Scalaz%E3%82%B3%E3%83%B3%E3%83%88%E3%83%AA%E3%83%93%E3%83%A5%E3%83%BC%E3%82%BF%E3%83%BC%E3%81%AB%E3%82%88%E3%82%8B%E9%96%A2%E6%95%B0%E5%9E%8B%E5%BE%B9%E5%BA%95%E3%82%AC%E3%82%A4%E3%83%89-impress-gear/dp/4844337769/)
 
 
 
@@ -721,4 +721,35 @@ res97: scala.collection.immutable.Map[String,Int] = Map(key1 -> 1, key2 -> 2)
 ## 練習問題
 
 
+
+## 今日出てきたキーワード
+
+* 型パラメータ
+* 多相
+* 型コンストラクタ
+* ファーストクラスな関数
+* 関数リテラル
+* 部分適用
+* 高階メソッド
+* ローンパターン
+* 複数の引数リスト、カリー化されたメソッド
+* 左畳み込み、右畳み込み
+* Option
+
+
+
+## 要注意ポイント
+
+* ListやOptionなどは型ではなく型コンストラクタ
+* Optionの高階メソッドを使うことで、Optionの結果を都度パターンマッチしなくて済む
+* map、filter、withFilter、flatMap、foreachメソッドをfor式で書き直すことができる
+
+
+## 参考サイト
+
+* [Scala の省略ルール早覚え](https://gist.github.com/gakuzzzz/10104162)
+* [Scala using(Hishidama's Scala loan-pattern Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/sample/using.html)
+* [ScalaのOptionステキさについてアツく語ってみる - ( ꒪⌓꒪) ゆるよろ日記](http://yuroyoro.hatenablog.com/entry/20100710/1278763193)
+* [Scala for実体メモ(Hishidama's Scala for-convert Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/collection/for.html)
+* [Scala関数型デザイン&プログラミング](http://www.amazon.co.jp/Scala%E9%96%A2%E6%95%B0%E5%9E%8B%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3-%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E2%80%95Scalaz%E3%82%B3%E3%83%B3%E3%83%88%E3%83%AA%E3%83%93%E3%83%A5%E3%83%BC%E3%82%BF%E3%83%BC%E3%81%AB%E3%82%88%E3%82%8B%E9%96%A2%E6%95%B0%E5%9E%8B%E5%BE%B9%E5%BA%95%E3%82%AC%E3%82%A4%E3%83%89-impress-gear/dp/4844337769/)
 
