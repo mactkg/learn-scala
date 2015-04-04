@@ -610,6 +610,13 @@ scala> Some("ABC").foreach(println(_))
 scala> Some("ABC").exits(_ == "AAA")
 ```
 
+デフォルトの値をOptionで返すorElseメソッドもあります。
+
+```scala
+scala> val o: Option[String] = Some("ABC").orElse(Some("DEFAULT"))
+scala> val o: Option[String] = None.orElse(Some("DEFAULT"))
+```
+
 Optionには、リストの高階メソッドで出てきたmapメソッドを持っています。
 
 ```scala
