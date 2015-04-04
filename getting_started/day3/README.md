@@ -1,4 +1,4 @@
-# Day3 書きかけ
+# Day3
 
 ## 型パラメータを使ったメソッド
 
@@ -788,6 +788,43 @@ res97: scala.collection.immutable.Map[String,Int] = Map(key1 -> 1, key2 -> 2)
 
 ## 練習問題
 
+1. List[Int]の要素全てを掛け合わせるメソッドを畳み込みを使ってつくってください。
+1. リストの長さを返すメソッドを畳み込みを使ってつくってください。型パラメータを使って多相なメソッドにしてください。
+1. リストの並び順を逆順にするメソッドを畳み込みを使ってつくってください。
+1. 2つの同じ型のリストを結合するメソッドを畳み込みを使ってつくってください。
+1. 2人のユーザーの年齢の合計を返す処理を考えます。Web API の1つだと仮定してください。リクエストが来ると以下のメソッドが呼ばれます。リクエストパラメータは指定されてくるかどうか分からないのでOption型となっています。
+  
+  ```scala
+  def addAges(userIdParam1: Option[Int], userIdParam2: Option[Int], minAgeParam: Option[Int]): Int
+  ```
+  
+  ユーザーはケースクラスで表します。ユーザー情報を取得するにはfindByIdメソッドを使います。DBはMapで代用します。
+  
+  ```scala
+  case class User(id: Int, age: Int)
+  
+  private val db = Map(
+    1 -> User(1, 19),
+    2 -> User(2, 25),
+    3 -> User(3, 30)
+  )
+  def findById(id: Int): Option[User] = {
+    db.get(id)
+  }
+  ```
+  
+  addAgesメソッドを実装してください。minAgeパラメータのデフォルト値は20としてください。minAgeパラメータで指定された年齢を下回るユーザーの年齢は0とみなしてください。ユーザーIDがどちらか一方でも指定されなかった場合は0としてください。
+  
+  こんな感じの結果が返ってくるはずです。
+  
+  ```scala
+  scala> addAges(Some(1), Some(2), None)
+  res0: Int = 25
+
+  scala> addAges(Some(1), Some(2), Some(1))
+  res1: Int = 44
+  ```
+
 
 
 ## 今日出てきたキーワード
@@ -811,6 +848,7 @@ res97: scala.collection.immutable.Map[String,Int] = Map(key1 -> 1, key2 -> 2)
 * ListやOptionなどは型ではなく型コンストラクタ
 * Optionの高階メソッドを使うことで、Optionの結果を都度パターンマッチしなくて済む
 * map、filter、withFilter、flatMap、foreachメソッドをfor式で書き直すことができる
+
 
 
 ## 参考サイト
