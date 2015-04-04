@@ -392,7 +392,7 @@ def writeTo(fileName: String, body: String): Unit = {
 }
 ```
 
-ここでは深く追いませんが、このように複数の引数リストを持つメソッドをカリー化されたメソッド、と読んだりします。
+ここでは深く追いませんが、このように複数の引数リストを持つメソッドをカリー化されたメソッド、と呼んだりします。
 
 
 
@@ -702,7 +702,7 @@ scala> m.get("hogehoge")
 res95: Option[Int] = None
 ```
 
-MapシングルトンオブジェクトのapplyメソッドでMapのインスタンスをつくっています。引数にはキーと値をタプルで渡してます。メソッド呼び出し時の型パラメータは省略可能でした。Mapのインスタンスをつくるときは`Map(("key1", 1), ("key2", 2))`ではなく`Map("key1" -> 1, "key2" -> 2)`という風に書くことが多いです。この書き方については後で説明します。
+MapシングルトンオブジェクトのapplyメソッドでMapのインスタンスをつくっています。引数にはキーと値をタプルで渡してます。メソッド呼び出し時の型パラメータは省略可能でした。Mapのインスタンスをつくるときは`Map(("key1", 1), ("key2", 2))`ではなく`Map("key1" -> 1, "key2" -> 2)`という風に書くことが多いです。この書き方についてはDay4で説明します。
 
 Mapから値を取り出すにはgetメソッドを使いますが、getメソッドの返り値はOptionです。指定したキーが存在しない場合はNoneが返ります。
 
@@ -718,106 +718,7 @@ res97: scala.collection.immutable.Map[String,Int] = Map(key1 -> 1, key2 -> 2)
 
 
 
-## 暗黙の型変換
-
-MapをつくるときMapのapplyメソッドを使いました。`Map(("key1", 1), ("key2", 2))`という風に使いますが、`Map("key1" -> 1, "key2" -> 2)`とも書けました。`("key1", 1)`というタプルの代わりに`"key1" -> 1`を指定しています。"key1"というStringの->メソッドを呼び出し、その結果がタプルになっていれば辻褄が合います。しかし、ScalaのStringはJavaのStringを使っていて、JavaのStringには->メソッドは存在しません。
-
-暗黙の型変換（implicit conversion）という仕組みを利用して、Stringに->メソッドがあるかのように振る舞わせることができます。
-
-まず、暗黙の型変換とはなんでしょうか。Day2で出てきたRectangle型を思い出しましょう。
-
-```scala
-scala> case class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double)
-scala> val rec = Rectangle(0, 0, 2, 3)
-```
-
-Rectangleケースクラスは、Double型の値を4つ受け取る定義ですが、インスタンス化するときにInt型の値を指定しています。Int型の値を指定してるのにコンパイルが通るのは、暗黙の型変換によりInt型がDouble型に変換されてるためです。
-
-Rectangleケースクラスに、Rectangle型の値を受け取り、自分自身と面積を比べて大きい方を返すmaxメソッドを追加してみます。
-
-```scala
-scala> case class Rectangle(x1: Double, y1: Double, x2: Double, y2: Double) {
-     |   val area = math.abs(x2 - x1) * math.abs(y2 - y1)
-     |   def max(a: Rectangle): Rectangle = if (a.area > this.area) a else this
-     | }
-
-scala> val rec = Rectangle(0, 0, 2, 3)
-scala> rec.max(Rectangle(0, 0, 1, 2))
-```
-
-4要素のタプルをmaxメソッドに渡してみましょう。
-
-```scala
-scala> rec.max((0, 0, 1, 2))
-<console>:11: error: type mismatch;
- found   : (Int, Int, Int, Int)
- required: Rectangle
-              rec.max((0, 0, 1, 2))
-                      ^
-```
-
-当然コンパイルエラーになりますね。ここで、Int型が4つのタプルを、Rectangle型へ変換するメソッドをつくってみます。
-
-```scala
-scala> def toRectangle(t: (Int, Int, Int, Int)): Rectangle = Rectangle(t._1, t._2, t._3, t._4)
-scala> rec.max(toRectangle(0, 0, 1, 2))
-```
-
-この`toRectangle(0, 0, 1, 2)`というメソッド呼び出しを暗黙的に実行させ、暗黙の型変換を行うようにします。暗黙の型変換は、変換処理を行うメソッドに`implicit`をつけます。
-
-```scala
-scala> implicit def toRectangle(t: (Int, Int, Int, Int)): Rectangle = Rectangle(t._1, t._2, t._3, t._4)
-scala> rec.max((0, 0, 1, 2))
-```
-
-4要素のタプルをRectangle型へ変換を行う暗黙の型変換を定義できました。
-
-暗黙の型変換を使うと、元々存在している型にメソッドを追加することができます。
-
-例えば、数値に文字列を渡すと、数値の回数だけ渡された文字列を繰り返すrepeatというメソッドを、Intにつけ足してみましょう。`3.repeat("Hoge")`というように呼べたらOKです。
-
-まずは、RepeatorというIntとは別のクラスを作ってみましょう。
-
-```scala
-scala> class Repeater(x: Int) {
-     |   def repeat(s: String) = (0 until x).foldLeft("")((acc, a) => acc + s)
-     | }
-
-scala> new Repeater(3).repeat("hogehoge")
-```
-
-`new Repeator(3)`というのを暗黙的に行うようにします。クラスに`implicit`をつけます。
-
-```scala
-scala> implicit class Repeater(x: Int) {
-     |   def repeat(s: String) = (0 until x).foldLeft("")((acc, a) => acc + s)
-     | }
-defined class Repeater
-
-scala> 3.repeat("hogehoge")
-```
-
-Int型に新たにrepeatメソッドをつけ足すことができました。クラスに`implicit`をつけるやり方はScala2.10以降にできるようになりました。それ以前はPimp My Libraryと呼ばれるパターンが使われていました。参考サイト -> [Scala 2.10.0 M3の新機能を試してみる(2) - SIP-13 - Implicit classes](http://kmizu.hatenablog.com/entry/20120506/1336302407)
-
-`implicit class`をつけた方法は毎回Repeaterクラスをnewしてしまいます。AnyValを継承すると効率を上げることができます。こちらを参考してください。[Scalaメソッド定義メモ(Hishidama's Scala def Memo) # 暗黙クラス（implicit class）](http://www.ne.jp/asahi/hishidama/home/tech/scala/def.html#h_implicit_class)
-
-Mapで使った->メソッドも暗黙の型変換によって実現されています。`"key1" -> 1`と書くと暗黙の型変換によりStringである"key1"に->メソッドがあるかのように振る舞い、`("key1", 1)`というタプルを返します。
-
-この暗黙の型変換は、Predefというシングルトンオブジェクトに定義されています。ScalaではデフォルトでPredefシングルトンオブジェクトのメソッドをimportしています。シングルトンオブジェクトが何かは次回やります。ここではいくつかの暗黙の型変換メソッドがデフォルトで用意されている、ということを分かってください。Prefefには便利な暗黙の型変換が用意されています。 [Scala Predefオブジェクトメモ(Hishidama's Scala Predef Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/predef.html)
-
-このようにScalaでは暗黙の型変換を使うことで、既存のクラスを拡張できます。
-
-暗黙の型変換について、コップ本に注意点が書いてあります。
-
-> 暗黙の型変換の使い方を誤ると、クライアントコードを読みにくく理解しにくいものにしてしまう危険がある。暗黙の型変換はソースコードに明示的に書き出されるのではなく、コンパイラが暗黙のうちに適用するので、クライアントプログラマーからは、どのような暗黙の型変換が適用されているのかはっきりとはわからない。
-> （中略）
-> 簡潔さは読みやすさの大きな構成要素だが、簡潔すぎてわからないということもある。効果的な簡潔さをもたせて、わかりやすいクライアントコードを書けるライブラリーを設計すれば、クライアントプログラマーたちが生産的に仕事を進めるのを後押しできる。
-
-引用元：[Scalaスケーラブルプログラミング第2版](http://www.amazon.co.jp/Scala%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%96%E3%83%AB%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E7%AC%AC2%E7%89%88-Martin-Odersky/dp/4844330845/)
-
-
-
-
 ## 練習問題
+
 
 
