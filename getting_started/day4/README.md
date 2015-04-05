@@ -532,46 +532,6 @@ scala> val b: Capsule[Shape] = rec.replace(Circle(0,0,5))
 
 
 
-## 暗黙の引数
-
-
-
-
-## アドホック多相
-
-Day2で型パラメータを使い多相なメソッドをつくりました。型パラメータの他にサブ型をつかった方法も多相を実現する方法の1つです。
-
-これは引数に指定される型をより抽象的に扱うことで多相を実現してました。では、指定された型によって振る舞いを変えたいときはどうしたらいいのでしょうか。Rectangle型とCircle型をスーパー型であるShape型として扱うのではなく、Rectangle型とCircle型を使って処理を分けたいときです。
-
-このように指定した型によって振る舞いが変わる多相をアドホック多相と呼ぶようです。これは、オーバーロードで実現できます。オーバーロードとは、メソッド名は同じですが、引数の型と返り値の型が異なるようなメソッドを複数定義することです。
-
-```scala
-object Hoge {
-  def flipFlap(x: Int): Int = -x
-  def flipFlap(s: String): String = s.reverse
-  def flipFlap(b: Boolean): Boolean = !b
-}
-```
-
-```scala
-scala> Hoge.flipFlap(1)
-res8: Int = -1
-
-scala> Hoge.flipFlap("abcde")
-res9: String = edcba
-
-scala> Hoge.flipFlap(true)
-res10: Boolean = false
-```
-
-できましたね。
-
-しかし、Option[Int]型とOption[String]にも対応しようとすると、これはコンパイルエラーとなってしまいます。これはScalaの実行環境であるJVMの影響で、型コンストラクタからつくった型の見分けがつかないためです。Option[Int]型とOption[String]型の区別がつかなくなるということです。これを型消去（type erasure）と言います。
-
-型パラメータを使うことで、型消去を回避してアドホック多相実現することができます。ここではやりません。「implicit parameter 型クラス」でググってみてください。こちらのページも参考になります。 -> [Scala の implicit parameter は型クラスの一種とはどういうことなのか](http://nekogata.hatenablog.com/entry/2014/06/30/062342)
-
-
-
 ## ScalaのAPIドキュメントを読んでみる
 
 ScalaのAPIドキュメントでListを調べてみましょう。
