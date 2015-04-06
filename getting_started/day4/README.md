@@ -534,15 +534,181 @@ scala> val b: Capsule[Shape] = rec.replace(Circle(0,0,5))
 
 ## ScalaのAPIドキュメントを読んでみる
 
-ScalaのAPIドキュメントでListを調べてみましょう。
+ScalaのAPIドキュメントでListを調べてみましょう。[http://www.scala-lang.org/api/current/](http://www.scala-lang.org/api/current/)
+
+コンパニオンオブジェクトとクラスに分かれていることが分かると思います。コンパニオンオブジェクトのapplyメソッドや、クラスのこれまでに使ってきたメソッドを見てみましょう。
+
+またListの宣言部を見るとabstractなクラスであり、様々なトレイトを実装していることが分かります。Listクラス自体はabstractで実態はなんでしょうか。"Type Hierarchy"という項目を見ると、::というクラスとNilというシングルトンオブジェクトがサブクラスとなっており、それらが実態となります。
+
+Intクラスも見てみましょう。"Type Hierarchy"という項目を見ると、RichIntなどへ暗黙の型変換されることが分かります。
+
+
+
+## activator(sbt)
+
+sbtというのはScalaのビルドツールです。activatorというのはsbtにプロジェクトのテンプレート作成機能などを追加したツールです。
+
+以下のコマンドでヘルプが出力されます。
+
+```
+$ activator -h
+```
+
+以下のコマンドでテンプレート一覧が表示されます。かなりの量です。
+
+```
+$ activator list-templates
+```
+
+"hello-scala-2_11"というテンプレートでプロジェクトをつくってみましょう。
+
+```
+$ activator new hello-project hello-scala-2_11
+```
+
+このようなファイル達が自動で生成されます。
+
+```
+$ tree -a hello-project/
+hello-project/
+├── .gitignore
+├── LICENSE
+├── activator
+├── activator-launch-1.3.2.jar
+├── activator.bat
+├── build.sbt
+├── project
+│   └── build.properties
+└── src
+    ├── main
+    │   └── scala
+    │       └── Hello.scala
+    └── test
+        └── scala
+            └── HelloSpec.scala
+```
+
+以下のファイルたちはプロジェクトで使うactivatorです。これらをGitなどのバージョン管理ツールに入れておくことで、プロジェクトメンバー間やCIツールで同じバージョンのactivatorを使うことができます。
+
+* activator
+* activator-launch-1.3.2.jar
+* activator.bat
+* project/build.properties
+
+以下のファイルがactivator(sbt)で使うファイルです。ビルドの設定ファイルです。
+
+* build.sbt
+
+build.sbtの中身を見てましょう。中身はScalaのDSLになっています。`name`や`libraryDependencies`といったキーに対して値を設定することでビルドの設定を行います。キーは値を1つだけ設定できるものと複数設定できるものがあります。`name`は前者で`libraryDependencies`は後者です。
+
+```scala
+name := """hello-project"""
+
+version := "1.0"
+
+scalaVersion := "2.11.0"
+
+libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.1.3" % "test"
+```
+
+build.sbt内の各キーに対する設定は空行で区切ってください。
+
+`:=`というのは代入になります。`name`や`version`という設定を行っています。これらはビルドの成果物のファイル名に使われます。
+
+`+=`というのはコレクションへ要素を追加しています。`libraryDependencies`というコレクションに`"org.scalatest" % "scalatest_2.11" % "2.1.3" % "test"`を追加しています。`libraryDependencies`というのは名前の通り依存するライブラリを設定しておくコレクションです。ここに設定されたライブラリがビルド時にダウンロードされます。
+
+複数のライブラリを使う場合は`+=`を複数回書く必要があります。build.sbtはScalaのDSLですので、Scalaのコードを書くことができます。そのため、`++=`を使って`libraryDependencies`にSeqでつけたすこともできます。例えば以下のように書けます。
+
+```scala
+libraryDependencies ++= Seq(
+  "org.scalatest" % "scalatest_2.11" % "2.1.3" % "test",
+  "com.typesafe.play" %% "play-slick" % "0.8.1"
+)
+```
+
+以下のファイルがソースコードです。`src/main/scala`ディレクトリにあるソースコードがプロダクションコードです。`src/text/scala`ディレクトリにあるソースコードがテストコードです。これらのディレクトリ内にコードを追加していきます。
+
+* src/main/scala/Hello.scala
+* src/test/scala/HelloSpec.scala
+
+ソースコードを見てみましょう。
+
+```scala
+object Hello {
+  def main(args: Array[String]): Unit = {
+    println("Hello, world!")
+  }
+}
+```
+
+Scalaではコンパイル後のファイルを実行するとき、シングルトンオブジェクトの`main(args: Array[String]): Unit` メソッドが実行されます。ソースコードを見てみるとテンプレートで生成されたアプリケーションは"Hello, world!"と標準出力に出力するだけですね。
+
+activatorコマンド使ってビルド・実行をしてみましょう。build.sbtがあるディレクトリでactivatorコマンドを実行すると対話モードになります。対話モードでrunコマンドを実行しましょう。初回はライブラリなどのダウンロードがあるためかなり時間が掛かります。
+
+```
+$ ./activator
+
+> run
+
+[info] Running Hello
+Hello, world!
+[success] Total time: 63 s, completed 2015/04/05 10:46:56
+```
+
+動きましたね！対話モードを抜けるときは`exit`と入力しましょう。
+
+```
+> exit
+```
+
+sbtのドキュメントはこちらにあるので読んでみましょう。 [始めるsbt](http://www.scala-sbt.org/0.13/tutorial/ja/index.html)
 
 
 
 ## 今後の学習
 
+お疲れさまです！Scala入門ハンズオンはこれで終了です！今後さらにScalaを勉強するにはどうしたらいいでしょうか？
+
+Scalaの豊富なコレクションについては知っておいた方がいいです。性能特性も確認しましょう。
+
+* [可変コレクションおよび不変コレクション](http://docs.scala-lang.org/ja/overviews/collections/overview.html)
+* [性能特性](http://docs.scala-lang.org/ja/overviews/collections/performance-characteristics.html)
+* [なぜListではなくSeqを使うべきなのか](http://qiita.com/i524/items/2eb2ca12291fee86e87b)
+
+暗黙の引数や抽出子など、入門ハンズオンでは説明できなかったScalaの機能がまだあります。Scalaという言語自体をもっと知りたい場合は以下の書籍を読みましょう。通称コップ本と呼ばれておりScalaのバイブル的な書籍です。Scala公式ドキュメントも載せておきます。
+
+* [Scalaスケーラブルプログラミング第2版](http://www.amazon.co.jp/Scala%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%96%E3%83%AB%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E7%AC%AC2%E7%89%88-Martin-Odersky/dp/4844330845/)
+* [ガイドと概要 - Scala Documentation](http://docs.scala-lang.org/ja/overviews/index.html)
+
+Scalaで何かつくるときはScala逆引きレシピという書籍があるとリファレンスとして役立つでしょう。ひしだまさんのサイトにもすごくお世話になります。
+
+* [Scala逆引きレシピ](http://www.amazon.co.jp/Scala%E9%80%86%E5%BC%95%E3%81%8D%E3%83%AC%E3%82%B7%E3%83%94-PROGRAMMER%E2%80%99S-RECiPE-%E7%AB%B9%E6%B7%BB-%E7%9B%B4%E6%A8%B9/dp/4798125415/)
+* [Scalaメモ(Hishidama's Scala Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/)
+
+Webアプリケーションをつくりたい場合はPlay2というフレームワークがよく使われます。ハンズオン用のドキュメントがWeb上にあるのでやってみると良さそうです。
+
+* [Play2 + Slickハンズオン](https://github.com/bizreach/play2-hands-on)
+
+関数型プログラミングについてもっと学びたい、という場合は以下の書籍を読むといいと思います。Scalaを使って関数型プログラミングについて説明されています。
+
+* [Scala関数型デザイン&プログラミング](http://www.amazon.co.jp/Scala%E9%96%A2%E6%95%B0%E5%9E%8B%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3-%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E2%80%95Scalaz%E3%82%B3%E3%83%B3%E3%83%88%E3%83%AA%E3%83%93%E3%83%A5%E3%83%BC%E3%82%BF%E3%83%BC%E3%81%AB%E3%82%88%E3%82%8B%E9%96%A2%E6%95%B0%E5%9E%8B%E5%BE%B9%E5%BA%95%E3%82%AC%E3%82%A4%E3%83%89-impress-gear/dp/4844337769/)
+
+Twitter社によるベストプラクティスが書かれたEffective Scalaもおすすめです。
+
+* [Effective Scala](http://twitter.github.io/effectivescala/index-ja.html)
+
+日本のScalaコミュニティのサイトはこちらです。
+
+* [日本Scalaユーザーズグループ](http://jp.scala-users.org/)
+
+
+
+## 練習問題
+
 
 
 ## 今日出てきたキーワード
+
 * シングルトンオブジェクト、コンパニオンオブジェクト
 
 
