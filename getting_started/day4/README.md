@@ -101,51 +101,6 @@ Mapで使った->メソッドも暗黙の型変換によって実現されてい
 
 
 
-## Scalaの階層構造
-
-Scalaの全てのクラスはAnyのサブクラスになるという話を前にしました。ただすぐ親のクラスAnyなわけではないです。
-
-Anyのサブクラスには、AnyValとAnyRefがあります。
-
-AnyValのサブクラスとしては、まず以下のような数値を表すクラスがあります。これらのクラスに親子関係はないですが、暗黙の型変換があります。Byte -> Short というように上から下への暗黙の型変換がPredefに定義されています。
-
-* Byte
-* Short
-* Int
-* Long
-* Float
-* Double
-
-他には、1文字を表すChar、真理値のBoolean、副作用があったことを示すのによく用いられるUnitがあります。Char -> Int という暗黙の型変換がPredefに定義されています。
-
-* Char
-* Boolean
-* Unit
-
-Scalaが最初から用意しているAnyValのサブクラスはこれで全てです。
-
-自分でAnyValのサブクラスをつくることもできます。こちらのサイトが参考になります -> [Scala Anyクラスメモ(Hishidama's Scala Any Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/any.html#h_AnyVal)
-
-その他のScalaが用意しているクラスはAnyRefのサブクラスです。自分でクラスを定義したときにextendsを書かなかった場合は、自動的にAnyRefのサブクラスとなります。
-
-AnyRefのサブクラス、全てのサブクラスになるNullというのがあります。Null型は他の言語にあるnullを表す型です。AnyRefのサブクラスである型には、nullを代入できますが、Scalaではnullは使いません。Javaとの互換性のために存在してます。
-
-すべてのクラスのサブクラスになるNothingというのもあります。これはどんな型にも代入できる型なのですが、使いどころとしては例外を発生させる場合です。
-
-例えば、Day2でリストの先頭要素を取り出すheadメソッドをつくってみました。このメソッドはNilを渡すとエラーになります。`case x`のときはInt型が返って、`case Nil`のときは例外が発生します。
-```scala
-scala> def head(xs: List[Int]): Int = {
-     |   xs match {
-     |     case Nil       => throw new IllegalArgumentException
-     |     case x :: tail => x
-     |   }
-     | }
-```
-
-headメソッドの返り値はInt型です。`throw`も式なのですが、`throw`の評価結果がInt型であるわけではないです。Int型を返さない場合があるにも関わらずメソッドの返り値をInt型と定義できるのは、`throw`式がNothing型を返すからです。Nothing型は全ての型に代入できるので、headメソッドの返り値の型をInt型にしてもコンパイルできることになります。
-
-
-
 ## パッケージ
 
 今までつくってきたクラスはすべてグローバル空間に定義していました。プログラムが大きくなると管理するのが大変なので、Scalaではパッケージを使って、メソッド名やクラス名の衝突を防いだり、別パッケージからは見えないメソッドを作ったりします。パッケージは`package`で指定します。ファイルの先頭に指定するのが一般的です。
