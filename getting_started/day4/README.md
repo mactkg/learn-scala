@@ -366,16 +366,18 @@ scala> a <= c
 
 ## 型パラメータの境界
 
-Day2でやったクイックソートのコードを思い出してみましょう。
+Day2の練習問題でやったバイナリサーチのコードを思い出してみましょう。ソート済みのリストから値を検索します。
 
 ```scala
-def quickSort(xs: List[Int]): List[Int] = xs match {
-  case Nil       => Nil
-  case x :: Nil  => List(x)
-  case x :: tail => {
-    val smallerOrEqual = for (y <- tail; if y <= x) yield y
-    val larger         = for (y <- tail; if y > x) yield y
-    quickSort(smallerOrEqual) ++ List(x) ++ quickSort(larger)
+def binarySearch(list: List[Int], a: Int): Boolean = list match {
+  case Nil      => false
+  case x :: Nil => x == a
+  case _ => {
+    val p = list.size / 2
+    val m = list(p)
+    if (a == m)     true
+    else if (a < m) binarySearch(list.take(p), a)
+    else            binarySearch(list.drop(p), a)
   }
 }
 ```
@@ -383,60 +385,64 @@ def quickSort(xs: List[Int]): List[Int] = xs match {
 これはList[Int]型にしか対応していませんが、List[Double]やList[Float]などにも対応して多相性を持たせたくなりました。では単純にList[Int]を型パラメータを使ってList[A]に書き換えてみましょう。
 
 ```scala
-def quickSort[A](xs: List[A]): List[A] = xs match {
+def binarySearch[A](list: List[A], a: A): Boolean = list match {
   ・・・
 ```
 
 REPLで読み込んでみます。
 
 ```scala
-scala> :load quicksort.scala
-Loading quicksort.scala...
-<console>:19: error: value <= is not a member of type parameter A
-           val smallerOrEqual = for (y <- tail; if y <= x) yield y
-                                                     ^
-<console>:20: error: value > is not a member of type parameter A
-           val larger         = for (y <- tail; if y > x) yield y
-                                                     ^
+scala> :lo src/binarySearch.scala
+Loading src/binarySearch.scala...
+<console>:16: error: value < is not a member of type parameter A
+           else if (a < m) binarySearch(list.take(p), a)
+                                 ^
 ```
 
-比較演算子が存在しないよというコンパイルエラーになりました。最もな指摘ですね。型パラメータAを導入し、引数`xs`の型をList[A]型を受け取れるようにしたため、`xs`の要素であるA型のオブジェクトに比較演算子が定義されていない可能性があります。型パラメータAに指定できる型が、Orderedをミックスインした型に限定できればコンパイルできるはずです。
+比較演算子が存在しないよというコンパイルエラーになりました。最もな指摘ですね。型パラメータAを導入し、引数`list`の型をList[A]型にしたため、`list`の要素であるA型のオブジェクトに比較演算子が定義されていない可能性があります。型パラメータAに指定できる型が、Orderedトレイトをミックスインした型に限定できればコンパイルできるはずです。
 
 このように型パラメータに指定できる型を限定する方法が型パラメータの境界です。ある型のサブクラスに限定したい場合は、`<:`を使います。これを上限境界と呼びます。
 
 ```scala
-def quickSort[A <: Ordered[A]](xs: List[A]): List[A] = xs match {
+def binarySearch[A <: Ordered[A]](list: List[A], a: A): Boolean = list match {
   ・・・
 ```
 
-REPLで使ってみましょう。先ほどOrderedトレイトをミックスインしたShapeのリスト、List[Shape]型を並べ替えることができるようになりました。
+REPLで使ってみましょう。先ほどOrderedトレイトをミックスインしたShapeのリスト、List[Shape]型に対して2分探索できるようになりました。
 
 ```scala
 scala> val xs: List[Shape] = List(Circle(0,0,5), Circle(0,0,8), Rectangle(0,0,2,3))
-scala> quickSort(xs)
+scala> binarySearch(xs, Circle(0,0,5))
 ```
 
-しかし、List[Int]型が並べ替えることができません！
+しかし、List[Int]型の2分探索ができません！
 
 ```scala
-scala> val xs: List[Int] = List(2,8,3,5,1,9)
-scala> quickSort(xs)
-<console>:18: error: inferred type arguments [Int] do not conform to method quickSort's type parameter bounds [A <: Ordered[A]]
-              quickSort(xs)
+scala> val xs: List[Int] = List(1,2,3,4,5)
+xs: List[Int] = List(1, 2, 3, 4, 5)
+
+scala> binarySearch(xs, 3)
+<console>:11: error: inferred type arguments [Int] do not conform to method binarySearch's type parameter bounds [A <: Ordered[A]]
+              binarySearch(xs, 3)
               ^
-<console>:18: error: type mismatch;
+<console>:11: error: type mismatch;
  found   : List[Int]
  required: List[A]
-              quickSort(xs)
-                        ^
+              binarySearch(xs, 3)
+                           ^
+<console>:11: error: type mismatch;
+ found   : Int(3)
+ required: A
+              binarySearch(xs, 3)
+                               ^
 ```
 
-Int型はOrderedのサブ型ではないことが原因です。Int型はPredefでRichInt型への暗黙の型変換が定義されています。そしてRichInt型はOrderedをミックスインしています。つまり、Int型はOrderedのサブ型ではないですが、暗黙の型変換によりOrderedのサブ型になることができます。
+Int型はOrderedのサブ型ではないことが原因です。Int型はPredefでRichInt型への暗黙の型変換が定義されています。そしてRichInt型はOrderedのサブ型になっています。つまり、Int型はOrderedのサブ型ではないですが、暗黙の型変換によりOrderedのサブ型になることができます。
 
-直接の継承だけでなく、暗黙の型変換まで含めて限定したい場合は、`<:`ではなく`<%`を使います。これを可視境界と呼びます。可視境界を使うことでList[Int]型も並べ替えることができます。
+継承だけでなく、暗黙の型変換まで含めて限定したい場合は、`<:`ではなく`<%`を使います。これを可視境界と呼びます。可視境界を使うことでList[Int]型も2分探索できるようになります。
 
 ```scala
-def quickSort[A <% Ordered[A]](xs: List[A]): List[A] = xs match {
+def binarySearch[A <% Ordered[A]](list: List[A], a: A): Boolean = list match {
   ・・・
 ```
 
