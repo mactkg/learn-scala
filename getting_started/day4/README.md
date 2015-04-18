@@ -756,7 +756,7 @@ Twitter社によるベストプラクティスが書かれたEffective Scalaも�
   }
   ```
   
-1. quickSortメソッドを多層的なメソッドにしてください。List[Int]やList[Shape]、List[Double]で試してみてください。
+1. quickSortメソッドを多相的なメソッドにしてください。List[Int]やList[Shape]、List[Double]で試してみてください。
 1. Day2の練習問題でやった2分探索木を多相的なデータ構造にしてください。
   
   ```scala
