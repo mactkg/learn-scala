@@ -1,4 +1,4 @@
-# Day4 （書きかけ）
+# Day4
 
 ## 暗黙の型変換
 
@@ -712,7 +712,7 @@ Scalaの豊富なコレクションについては知っておいた方がいい
 * [性能特性](http://docs.scala-lang.org/ja/overviews/collections/performance-characteristics.html)
 * [なぜListではなくSeqを使うべきなのか](http://qiita.com/i524/items/2eb2ca12291fee86e87b)
 
-暗黙の引数や抽出子など、入門ハンズオンでは説明できなかったScalaの機能がまだあります。Scalaという言語自体をもっと知りたい場合は以下の書籍を読みましょう。通称コップ本と呼ばれておりScalaのバイブル的な書籍です。Scala公式ドキュメントも載せておきます。
+トレイトはほんの少ししかやってないですし、抽出子など入門ハンズオンでは説明できなかったScalaの機能がまだあります。Scalaという言語自体をもっと知りたい場合は以下の書籍を読みましょう。通称コップ本と呼ばれておりScalaのバイブル的な書籍です。Scala公式ドキュメントも載せておきます。
 
 * [Scalaスケーラブルプログラミング第2版](http://www.amazon.co.jp/Scala%E3%82%B9%E3%82%B1%E3%83%BC%E3%83%A9%E3%83%96%E3%83%AB%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E7%AC%AC2%E7%89%88-Martin-Odersky/dp/4844330845/)
 * [ガイドと概要 - Scala Documentation](http://docs.scala-lang.org/ja/overviews/index.html)
@@ -787,10 +787,30 @@ Twitter社によるベストプラクティスが書かれたEffective Scalaも�
 
 ## 今日出てきたキーワード
 
+* `implicit`
+* 暗黙の型変換
+* `AnyVal`
+* 暗黙の引数
+* activator
+* sbt
+* `package`
+* アクセス修飾子
+* `import`
+* `object`
 * シングルトンオブジェクト、コンパニオンオブジェクト
+* 可変長引数
+* トレイト
+* 上限境界、下限境界、可視境界
+* 変位指定アノテーション
 
 
 
 ## 要注意ポイント
+* `implicit`をつけたメソッドで暗黙の型変換できる
+* Predefシングルトンオブジェクトにいくつかの暗黙の型変換が定義されてる
+* 暗黙の型変換を使うと既存のクラスにメソッドを後付けできる
+* 暗黙の引数を使うとオブジェクトを色々なメソッドに引き廻すのが楽になる
+* activatorというツールでScalaアプリケーションをビルドしたり実行したりできる
+* activatorは、sbtというツールのうすくラップしたもの
 * `List(1,2,3,4,5)`というのは、Listシングルトンオブジェクトのapplyメソッドを呼び出している
 
