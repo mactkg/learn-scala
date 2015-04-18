@@ -742,6 +742,47 @@ Twitter社によるベストプラクティスが書かれたEffective Scalaも�
 
 ## 練習問題
 
+1. Day2でやったクイックソートを行うメソッドをListより抽象的なSeqに対応してください。
+  
+  ```scala
+  def quickSort(list: List[Int]): List[Int] = list match {
+    case Nil      => Nil
+    case x :: Nil => List(x)
+    case x :: xs  => {
+      val smallerOrEqual = for (y <- xs; if y <= x) yield y
+      val larger         = for (y <- xs; if y > x ) yield y
+      quickSort(smallerOrEqual) ++ List(x) ++ quickSort(larger)
+    }
+  }
+  ```
+  
+1. quickSortメソッドを多層的なメソッドにしてください。List[Int]やList[Shape]、List[Double]で試してみてください。
+1. Day2の練習問題でやった2分探索木を多相的なデータ構造にしてください。
+  
+  ```scala
+  sealed abstract class Tree {
+    def insert(x: Int): Tree
+    def contains(x: Int): Boolean
+    def remove(x: Int): Tree
+  }
+  case class Empty() extends Tree {
+    override def insert(x: Int): Tree = Node(x, Empty(), Empty())
+    override def contains(x: Int): Boolean = false
+    override def remove(x: Int): Tree = Empty()
+  }
+  case class Node(a: Int, left: Tree, right: Tree) extends Tree {
+    override def insert(x: Int): Tree =
+      if (x <= a) Node(a, left.insert(x), right)
+      else        Node(a, left, right.insert(x))
+  
+    override def contains(x: Int): Boolean =
+      if (x == a)      true
+      else if (x <= a) left.contains(x)
+      else             right.contains(x)
+    }
+  }
+  ```
+
 
 
 ## 今日出てきたキーワード
