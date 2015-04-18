@@ -101,54 +101,6 @@ Mapで使った->メソッドも暗黙の型変換によって実現されてい
 
 
 
-## パッケージ
-
-今までつくってきたクラスはすべてグローバル空間に定義していました。プログラムが大きくなると管理するのが大変なので、Scalaではパッケージを使って、メソッド名やクラス名の衝突を防いだり、別パッケージからは見えないメソッドを作ったりします。パッケージは`package`で指定します。ファイルの先頭に指定するのが一般的です。
-
-```scala
-// Hoge.scala
-package com.example.hoge
-
-class Hoge(s: String) {
-  def hello = "Hello, " + s + "!"
-}
-```
-
-異なるパッケージのクラスはクラス名だけで使えません。使う場合はパッケージ+クラス名で書くか、インポートします。インポートは`import`で指定します。インポート時に`_`を使うことでパッケージ内のすべてをインポートすることもできます。
-
-```scala
-scala> :paste -raw src/Hoge.scala
-scala> val a = new Hoge("World")
-<console>:7: error: not found: type Hoge
-       val a = new Hoge("World")
-                   ^
-
-scala> val a = new com.example.hoge.Hoge("World")
-scala> import com.example.hoge.Hoge
-scala> val a = new Hoge("World")
-scala> a.hello
-scala> :q // importをなかったことにしたいのでREPLを一度終了する
-
-scala> :paste -raw Hoge.scala
-scala> new Hoge
-<console>:8: error: not found: type Hoge
-              new Hoge
-                  ^
-
-scala> import com.example.hoge._
-scala> val a = new Hoge("World")
-```
-
-Scalaは、暗黙のうちに以下のインポートをすべてのプログラムに対して行っています。
-
-```scala
-import java.lang._
-import scala._
-import Predef._
-```
-
-
-
 ## 暗黙の引数
 
 暗黙の型変換で利用した`implicit`というキーワードですが、型変換とは別のところでも利用します。それが暗黙の引数です。メソッドの引数リストのうち一番最後の引数リストに`implicit`をつけることができます。
@@ -201,6 +153,54 @@ implicit val connection = connectDb
 val user = findById(userId)
 user.modifyName("Jiro")
 update(user)
+```
+
+
+
+## パッケージ
+
+今までつくってきたクラスはすべてグローバル空間に定義していました。プログラムが大きくなると管理するのが大変なので、Scalaではパッケージを使って、メソッド名やクラス名の衝突を防いだり、別パッケージからは見えないメソッドを作ったりします。パッケージは`package`で指定します。ファイルの先頭に指定するのが一般的です。
+
+```scala
+// Hoge.scala
+package com.example.hoge
+
+class Hoge(s: String) {
+  def hello = "Hello, " + s + "!"
+}
+```
+
+異なるパッケージのクラスはクラス名だけで使えません。使う場合はパッケージ+クラス名で書くか、インポートします。インポートは`import`で指定します。インポート時に`_`を使うことでパッケージ内のすべてをインポートすることもできます。
+
+```scala
+scala> :paste -raw src/Hoge.scala
+scala> val a = new Hoge("World")
+<console>:7: error: not found: type Hoge
+       val a = new Hoge("World")
+                   ^
+
+scala> val a = new com.example.hoge.Hoge("World")
+scala> import com.example.hoge.Hoge
+scala> val a = new Hoge("World")
+scala> a.hello
+scala> :q // importをなかったことにしたいのでREPLを一度終了する
+
+scala> :paste -raw Hoge.scala
+scala> new Hoge
+<console>:8: error: not found: type Hoge
+              new Hoge
+                  ^
+
+scala> import com.example.hoge._
+scala> val a = new Hoge("World")
+```
+
+Scalaは、暗黙のうちに以下のインポートをすべてのプログラムに対して行っています。
+
+```scala
+import java.lang._
+import scala._
+import Predef._
 ```
 
 
