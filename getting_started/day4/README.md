@@ -157,42 +157,171 @@ update(user)
 
 
 
+## activator(sbt)
+
+sbtというのはScalaのビルドツールです。activatorというのはsbtにプロジェクトのテンプレート作成機能などを追加したツールです。
+
+以下のコマンドでヘルプが出力されます。
+
+```
+$ activator -h
+```
+
+以下のコマンドでテンプレート一覧が表示されます。かなりの量です。
+
+```
+$ activator list-templates
+```
+
+"hello-scala-2_11"というテンプレートでプロジェクトをつくってみましょう。
+
+```
+$ activator new hello-project hello-scala-2_11
+```
+
+このようなファイル達が自動で生成されます。
+
+```
+$ tree -a hello-project/
+hello-project/
+├── .gitignore
+├── LICENSE
+├── activator
+├── activator-launch-1.3.2.jar
+├── activator.bat
+├── build.sbt
+├── project
+│   └── build.properties
+└── src
+    ├── main
+    │   └── scala
+    │       └── Hello.scala
+    └── test
+        └── scala
+            └── HelloSpec.scala
+```
+
+以下のファイルたちはプロジェクトで使うactivatorです。これらをGitなどのバージョン管理ツールに入れておくことで、プロジェクトメンバー間やCIツールで同じバージョンのactivatorを使うことができます。
+
+* activator
+* activator-launch-1.3.2.jar
+* activator.bat
+* project/build.properties
+
+以下のファイルがactivator(sbt)で使うファイルです。ビルドの設定ファイルです。
+
+* build.sbt
+
+build.sbtの中身を見てましょう。中身はScalaのDSLになっています。`name`や`libraryDependencies`といったキーに対して値を設定することでビルドの設定を行います。キーは値を1つだけ設定できるものと複数設定できるものがあります。`name`は前者で`libraryDependencies`は後者です。
+
+```scala
+name := """hello-project"""
+
+version := "1.0"
+
+scalaVersion := "2.11.0"
+
+libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.1.3" % "test"
+```
+
+build.sbt内の各キーに対する設定は空行で区切ってください。
+
+`:=`というのは代入になります。`name`や`version`という設定を行っています。これらはビルドの成果物のファイル名に使われます。
+
+`+=`というのはコレクションへ要素を追加しています。`libraryDependencies`というコレクションに`"org.scalatest" % "scalatest_2.11" % "2.1.3" % "test"`を追加しています。`libraryDependencies`というのは名前の通り依存するライブラリを設定しておくコレクションです。ここに設定されたライブラリがビルド時にダウンロードされます。
+
+複数のライブラリを使う場合は`+=`を複数回書く必要があります。build.sbtはScalaのDSLですので、Scalaのコードを書くことができます。そのため、`++=`を使って`libraryDependencies`にSeqでつけたすこともできます。例えば以下のように書けます。
+
+```scala
+libraryDependencies ++= Seq(
+  "org.scalatest" % "scalatest_2.11" % "2.1.3" % "test",
+  "com.typesafe.play" %% "play-slick" % "0.8.1"
+)
+```
+
+以下のファイルがソースコードです。`src/main/scala`ディレクトリにあるソースコードがプロダクションコードです。`src/text/scala`ディレクトリにあるソースコードがテストコードです。これらのディレクトリ内にコードを追加していきます。
+
+* src/main/scala/Hello.scala
+* src/test/scala/HelloSpec.scala
+
+ソースコードを見てみましょう。
+
+```scala
+object Hello {
+  def main(args: Array[String]): Unit = {
+    println("Hello, world!")
+  }
+}
+```
+
+Scalaではコンパイル後のファイルを実行するとき、シングルトンオブジェクトの`main(args: Array[String]): Unit` メソッドが実行されます。ソースコードを見てみるとテンプレートで生成されたアプリケーションは"Hello, world!"と標準出力に出力するだけですね。
+
+activatorコマンド使ってビルド・実行をしてみましょう。build.sbtがあるディレクトリでactivatorコマンドを実行すると対話モードになります。対話モードでrunコマンドを実行しましょう。初回はライブラリなどのダウンロードがあるためかなり時間が掛かります。
+
+```
+$ ./activator
+
+> run
+
+[info] Running Hello
+Hello, world!
+[success] Total time: 63 s, completed 2015/04/05 10:46:56
+```
+
+動きましたね！対話モードを抜けるときは`exit`と入力しましょう。
+
+```
+> exit
+```
+
+sbtのドキュメントはこちらにあるので読んでみましょう。 [始めるsbt](http://www.scala-sbt.org/0.13/tutorial/ja/index.html)
+
+
+
 ## パッケージ
 
 今までつくってきたクラスはすべてグローバル空間に定義していました。プログラムが大きくなると管理するのが大変なので、Scalaではパッケージを使って、メソッド名やクラス名の衝突を防いだり、別パッケージからは見えないメソッドを作ったりします。パッケージは`package`で指定します。ファイルの先頭に指定するのが一般的です。
 
 ```scala
-// Hoge.scala
-package com.example.hoge
+// src/scala/Hoge.scala
+package example.hoge
 
-class Hoge(s: String) {
+case class Hoge(s: String) {
   def hello = "Hello, " + s + "!"
 }
 ```
 
-異なるパッケージのクラスはクラス名だけで使えません。使う場合はパッケージ+クラス名で書くか、インポートします。インポートは`import`で指定します。インポート時に`_`を使うことでパッケージ内のすべてをインポートすることもできます。
+異なるパッケージのクラスはクラス名だけで使えません。
 
 ```scala
-scala> :paste -raw src/Hoge.scala
-scala> val a = new Hoge("World")
-<console>:7: error: not found: type Hoge
-       val a = new Hoge("World")
-                   ^
+object Hello {
+  def main(args: Array[String]): Unit = {
+    println(new Hoge("World").hello)
+  }
+}
+```
 
-scala> val a = new com.example.hoge.Hoge("World")
-scala> import com.example.hoge.Hoge
-scala> val a = new Hoge("World")
-scala> a.hello
-scala> :q // importをなかったことにしたいのでREPLを一度終了する
+この状態で`activator run`してみましょう。コンパイルエラーになりますね。
 
-scala> :paste -raw Hoge.scala
-scala> new Hoge
-<console>:8: error: not found: type Hoge
-              new Hoge
-                  ^
+```
+$ activator run
+[error] /・・・/hello-project/src/main/scala/Hello.scala:4: not found: type Hoge
+[error]     println(new Hoge("World").hello)
+[error]                 ^
+[error] one error found
+[error] (compile:compile) Compilation failed
+```
 
-scala> import com.example.hoge._
-scala> val a = new Hoge("World")
+使う場合はパッケージ+クラス名で書くか、インポートします。インポートは`import`で指定します。インポート時に`_`を使うことでパッケージ内のすべてをインポートすることもできます。
+
+```scala
+import example.hoge._
+
+object Hello {
+  def main(args: Array[String]): Unit = {
+    println(Hoge("World").hello)
+  }
+}
 ```
 
 Scalaは、暗黙のうちに以下のインポートをすべてのプログラムに対して行っています。
@@ -213,7 +342,7 @@ import Predef._
 
 ```scala
 // Hoge.scala
-package com.example.hoge
+package example.hoge
 
 class Hoge(s: String) {
   private def hello = "Hello, " + s + "!"
@@ -222,20 +351,19 @@ class Hoge(s: String) {
 
 `private`をつけたメソッドは呼べなくなりました。
 
-```scala
-scala> :paste -raw src/Hoge.scala
-scala> import com.example.hoge._
-scala> val a = new Hoge("World")
-scala> a.hello
-<console>:12: error: method hello in class Hoge cannot be accessed in com.example.hoge.Hoge
-              a.hello
-                ^
+```
+$ activator run
+[error] /・・・/hello-project/src/main/scala/Hello.scala:5: method hello in class Hoge cannot be accessed in example.hoge.Hoge
+[error]     println(new Hoge("World").hello)
+[error]                               ^
+[error] one error found
+[error] (compile:compile) Compilation failed
 ```
 
 コンストラクタに`private`をつけてみます。
 
-```
-package com.example.hoge
+```scala
+package example.hoge
 
 class Hoge private (s: String) {
   def hello = "Hello, " + s + "!"
@@ -244,13 +372,13 @@ class Hoge private (s: String) {
 
 `private`をつけたコンストラクタにはアクセスできなくなりました。
 
-```scala
-scala> :paste -raw Hoge.scala
-scala> import com.example.hoge._
-scala> val a = new Hoge("World")
-<console>:10: error: constructor Hoge in class Hoge cannot be accessed in object $iw
-       val a = new Hoge("World")
-               ^
+```
+$ activator run
+[error] /・・・/hello-project/src/main/scala/Hello.scala:5: constructor Hoge in class Hoge cannot be accessed in object Hello
+[error]     println(new Hoge("World").hello)
+[error]             ^
+[error] one error found
+[error] (compile:compile) Compilation failed
 ```
 
 もっと細かくアクセス制御したい場合は限定子というものを使います。限定子というのは`private[com.example.hoge]`というようにアクセス修飾子の後ろに`[]`で公開するパッケージやクラス名を指定します。こちらを参考にしてください -> [Scalaクラスメモ(Hishidama's Scala class Memo)](http://www.ne.jp/asahi/hishidama/home/tech/scala/class.html#h_access_modifiers)
@@ -272,14 +400,14 @@ object OriginPoint {
 
 シングルトンオブジェクトは何か1つしかないデータを表すのに使うことよりも、他の使い方で使われることが多いです。
 
-先ほど、Hogeクラスのコンストラクタを`private`にしました。そうするとことで`new Hoge`ができなくなりました。つまりどこからもインスタンス化できません。しかし、コンパニオンオブジェクトを使うことでインスタンス化できます。
+先ほど、Hogeケースクラスのコンストラクタを`private`にしました。そうするとことで`Hoge("world")`ができなくなりました。つまりどこからもインスタンス化できません。しかし、コンパニオンオブジェクトを使うことでインスタンス化できます。
 
 コンパニオンオブジェクトとは、同名のクラス定義と同じファイル内で定義されたシングルトンオブジェクトのことです。コンパニオンオブジェクトは、同名のクラス（これをコンパニオンクラスと言う）の`private`なメソッドやコンストラクタを呼び出すことができます。`Hoge`クラスのコンパニオンオブジェクトを定義してみましょう。
 
 ```scala
-package com.example.hoge
+package example.hoge
 
-class Hoge private (s: String) {
+case class Hoge private (s: String) {
   def hello = "Hello, " + s + "!"
 }
 object Hoge {
@@ -287,17 +415,16 @@ object Hoge {
 }
 ```
 
-使ってみましょう。applyメソッドはメソッド名を省略できましたね。
+使ってみましょう。applyメソッドはメソッド名を省略できましたね。これはコンパイルできます。
 
 ```scala
-scala> :paste -raw src/Hoge.scala
-scala> import com.example.hoge._
-scala> val a = new Hoge("World")
-<console>:14: error: constructor Hoge in class Hoge cannot be accessed in object $iw
-              new Hoge("World")
-              ^
+import example.hoge._
 
-scala> val a = Hoge("World")
+object Hello {
+  def main(args: Array[String]): Unit = {
+    println(Hoge("World").hello)
+  }
+}
 ```
 
 コンパニオンオブジェクトは結構使われています。例えば今まで何回も使ってきた`List(1,2,3,4,5)`というのもListコンパニオンオブジェクトのapplyメソッドを呼び出しています。Listはクラスではなく抽象クラスです。Listコンパニオンオブジェクトのapplyメソッドでは、Listのサブクラスをインスタンス化して返却しています。コンパニオンオブジェクトを使うことで、使う側が実態のクラスを意識しなくて済むようになっています。
@@ -572,127 +699,6 @@ ScalaのAPIドキュメントでListを調べてみましょう。[http://www.sc
 またListの宣言部を見るとabstractなクラスであり、様々なトレイトを実装していることが分かります。Listクラス自体はabstractで実態はなんでしょうか。"Type Hierarchy"という項目を見ると、::というクラスとNilというシングルトンオブジェクトがサブクラスとなっており、それらが実態となります。
 
 Intクラスも見てみましょう。"Type Hierarchy"という項目を見ると、RichIntなどへ暗黙の型変換されることが分かります。
-
-
-
-## activator(sbt)
-
-sbtというのはScalaのビルドツールです。activatorというのはsbtにプロジェクトのテンプレート作成機能などを追加したツールです。
-
-以下のコマンドでヘルプが出力されます。
-
-```
-$ activator -h
-```
-
-以下のコマンドでテンプレート一覧が表示されます。かなりの量です。
-
-```
-$ activator list-templates
-```
-
-"hello-scala-2_11"というテンプレートでプロジェクトをつくってみましょう。
-
-```
-$ activator new hello-project hello-scala-2_11
-```
-
-このようなファイル達が自動で生成されます。
-
-```
-$ tree -a hello-project/
-hello-project/
-├── .gitignore
-├── LICENSE
-├── activator
-├── activator-launch-1.3.2.jar
-├── activator.bat
-├── build.sbt
-├── project
-│   └── build.properties
-└── src
-    ├── main
-    │   └── scala
-    │       └── Hello.scala
-    └── test
-        └── scala
-            └── HelloSpec.scala
-```
-
-以下のファイルたちはプロジェクトで使うactivatorです。これらをGitなどのバージョン管理ツールに入れておくことで、プロジェクトメンバー間やCIツールで同じバージョンのactivatorを使うことができます。
-
-* activator
-* activator-launch-1.3.2.jar
-* activator.bat
-* project/build.properties
-
-以下のファイルがactivator(sbt)で使うファイルです。ビルドの設定ファイルです。
-
-* build.sbt
-
-build.sbtの中身を見てましょう。中身はScalaのDSLになっています。`name`や`libraryDependencies`といったキーに対して値を設定することでビルドの設定を行います。キーは値を1つだけ設定できるものと複数設定できるものがあります。`name`は前者で`libraryDependencies`は後者です。
-
-```scala
-name := """hello-project"""
-
-version := "1.0"
-
-scalaVersion := "2.11.0"
-
-libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.1.3" % "test"
-```
-
-build.sbt内の各キーに対する設定は空行で区切ってください。
-
-`:=`というのは代入になります。`name`や`version`という設定を行っています。これらはビルドの成果物のファイル名に使われます。
-
-`+=`というのはコレクションへ要素を追加しています。`libraryDependencies`というコレクションに`"org.scalatest" % "scalatest_2.11" % "2.1.3" % "test"`を追加しています。`libraryDependencies`というのは名前の通り依存するライブラリを設定しておくコレクションです。ここに設定されたライブラリがビルド時にダウンロードされます。
-
-複数のライブラリを使う場合は`+=`を複数回書く必要があります。build.sbtはScalaのDSLですので、Scalaのコードを書くことができます。そのため、`++=`を使って`libraryDependencies`にSeqでつけたすこともできます。例えば以下のように書けます。
-
-```scala
-libraryDependencies ++= Seq(
-  "org.scalatest" % "scalatest_2.11" % "2.1.3" % "test",
-  "com.typesafe.play" %% "play-slick" % "0.8.1"
-)
-```
-
-以下のファイルがソースコードです。`src/main/scala`ディレクトリにあるソースコードがプロダクションコードです。`src/text/scala`ディレクトリにあるソースコードがテストコードです。これらのディレクトリ内にコードを追加していきます。
-
-* src/main/scala/Hello.scala
-* src/test/scala/HelloSpec.scala
-
-ソースコードを見てみましょう。
-
-```scala
-object Hello {
-  def main(args: Array[String]): Unit = {
-    println("Hello, world!")
-  }
-}
-```
-
-Scalaではコンパイル後のファイルを実行するとき、シングルトンオブジェクトの`main(args: Array[String]): Unit` メソッドが実行されます。ソースコードを見てみるとテンプレートで生成されたアプリケーションは"Hello, world!"と標準出力に出力するだけですね。
-
-activatorコマンド使ってビルド・実行をしてみましょう。build.sbtがあるディレクトリでactivatorコマンドを実行すると対話モードになります。対話モードでrunコマンドを実行しましょう。初回はライブラリなどのダウンロードがあるためかなり時間が掛かります。
-
-```
-$ ./activator
-
-> run
-
-[info] Running Hello
-Hello, world!
-[success] Total time: 63 s, completed 2015/04/05 10:46:56
-```
-
-動きましたね！対話モードを抜けるときは`exit`と入力しましょう。
-
-```
-> exit
-```
-
-sbtのドキュメントはこちらにあるので読んでみましょう。 [始めるsbt](http://www.scala-sbt.org/0.13/tutorial/ja/index.html)
 
 
 
