@@ -149,6 +149,62 @@ import Predef._
 
 
 
+## 暗黙の引数
+
+暗黙の型変換で利用した`implicit`というキーワードですが、型変換とは別のところでも利用します。それが暗黙の引数です。メソッドの引数リストのうち一番最後の引数リストに`implicit`をつけることができます。
+
+```scala
+scala> def greet(name: String)(implicit s: String) = s"${s}, ${name}!"
+```
+
+このメソッドは今まで通り使うことができます。2つ目の引数を省略したらエラーですね。
+
+```scala
+scala> greet("Taro")("Hello")
+res0: String = Hello, Taro
+
+scala> greet("Taro")
+<console>:9: error: could not find implicit value for parameter s: String
+              greet("Taro")
+                   ^
+```
+
+エラーメッセージをよく読むと、「引数が足りません」ではなく、「implicit value が見つかりません」というようなことが書いてあります。「implicit value」とは、変数宣言に`implicit`をつけたものです。
+
+`implicit`がついた変数を用意してみましょう。
+
+```scala
+scala> implicit val x = "Hello"
+x: String = Hello
+
+scala> greet("Taro")
+res2: String = Hello, Taro
+```
+
+2つ目の引数を指定しなくてもgreetメソッドが動きました。このように`implict`がついた引数リストを暗黙の引数、`implict`がついた値を暗黙の値といいます。
+
+これが何の役に立つのでしょうか。1つ例を挙げるとDBへのコネクションなどを色々なメソッドで使いまわしたいオブジェクトがあるときに便利です。何度も何度も引数に渡すことになるのでグローバル変数で扱えるようにしたくなりますが、それは引数以外の状態に依存することになりテストしづらくなったりします。グローバル変数で扱う代わりに、DBコネクションを暗黙の値として定義し、DBコネクションを利用するメソッドは暗黙の引数としてDBコネクションを受け取るようにすることで、面倒さを回避できます。
+
+シンプルなのでありがたみが余りないですが、
+
+```scala
+val connection = connectDb
+val user = findById(userId, connection)
+user.modifyName("Jiro")
+update(user, connection)
+```
+
+というコードを以下のように書き換えることができる、という意味です。
+
+```scala
+implicit val connection = connectDb
+val user = findById(userId)
+user.modifyName("Jiro")
+update(user)
+```
+
+
+
 ## アクセス修飾子
 
 定義したクラスやメソッドを外部からアクセスできないようにしたいときに、アクセス修飾子を使います。`private`をつけると同じクラスのみからしかアクセスできなくなります。`protected`をつけると同じクラスかサブクラスからしかアクセスできなくなります。
