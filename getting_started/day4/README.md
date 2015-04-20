@@ -6,7 +6,7 @@ MapをつくるときMapのapplyメソッドを使いました。`Map(("key1", 1
 
 `("key1", 1)`というタプルの代わりに`"key1" -> 1`を指定しています。"key1"というStringの->メソッドを呼び出し、その結果がタプルになっていれば辻褄が合います。しかし、ScalaのStringはJavaのStringを使っていて、JavaのStringには->メソッドは存在しません。
 
-暗黙の型変換（implicit conversion）という仕組みを利用して、Stringに->メソッドがあるかのように振る舞わせることができます。
+Scalaでは暗黙の型変換（implicit conversion）という仕組みを利用して、Stringに->メソッドがあるかのように振る舞わせることができます。
 
 まず、暗黙の型変換とはなんでしょうか。Day2で出てきたRectangle型を思い出しましょう。
 
@@ -56,7 +56,7 @@ scala> rec.max((0, 0, 1, 2))
 
 4要素のタプルをRectangle型へ変換を行う暗黙の型変換を定義できました。
 
-この暗黙の型変換を使うと、元々存在している型にメソッドを追加することができます。
+この暗黙の型変換を使うと、元々存在している型にメソッドを追加する、ということもできます。
 
 例えば、数値に文字列を渡すと、数値の回数だけ渡された文字列を繰り返すrepeatというメソッドを、Intにつけ足してみましょう。`3.repeat("Hoge")`というように呼べたらOKです。
 
@@ -81,7 +81,9 @@ defined class Repeater
 scala> 3.repeat("hogehoge")
 ```
 
-Int型に新たにrepeatメソッドをつけ足すことができました。クラスに`implicit`をつけるやり方はScala2.10以降にできるようになりました。それ以前はメソッドにimplicitをつける方法を使用するPimp My Libraryと呼ばれるパターンが使われていました。参考サイト -> [Scala 2.10.0 M3の新機能を試してみる(2) - SIP-13 - Implicit classes](http://kmizu.hatenablog.com/entry/20120506/1336302407)
+Int型に新たにrepeatメソッドをつけ足すことができました。
+
+（クラスに`implicit`をつけるやり方はScala2.10以降にできるようになりました。それ以前はメソッドにimplicitをつける方法を使用するPimp My Libraryと呼ばれるパターンが使われていました。参考サイト -> [Scala 2.10.0 M3の新機能を試してみる(2) - SIP-13 - Implicit classes](http://kmizu.hatenablog.com/entry/20120506/1336302407)）
 
 `implicit class`をつけた方法は毎回Repeaterクラスをnewしてしまいます。AnyValを継承すると効率を上げることができます。こちらを参考してください。[Scalaメソッド定義メモ(Hishidama's Scala def Memo) # 暗黙クラス（implicit class）](http://www.ne.jp/asahi/hishidama/home/tech/scala/def.html#h_implicit_class)
 
@@ -135,7 +137,7 @@ res2: String = Hello, Taro
 
 2つ目の引数を指定しなくてもgreetメソッドが動きました。このように`implict`がついた引数リストを暗黙の引数、`implict`がついた値を暗黙の値といいます。
 
-これが何の役に立つのでしょうか。1つ例を挙げるとDBへのコネクションなどを色々なメソッドで使いまわしたいオブジェクトがあるときに便利です。何度も何度も引数に渡すことになるのでグローバル変数で扱えるようにしたくなりますが、それは引数以外の状態に依存することになりテストしづらくなったりします。グローバル変数で扱う代わりに、DBコネクションを暗黙の値として定義し、DBコネクションを利用するメソッドは暗黙の引数としてDBコネクションを受け取るようにすることで、面倒さを回避できます。
+これが何の役に立つのでしょうか。1つ例を挙げるとDBへのコネクションなどを色々なメソッドで使いまわしたいオブジェクトがあるときに便利です。DBコネクションを使うメソッドを呼び出す度に何度も引数に渡すことになるのでグローバル変数で扱えるようにしたくなりますが、それをやってしまうと引数以外の状態（しかもグローバル！）に依存することになりメソッドの複雑さが増し、テストしづらくなったりします。グローバル変数で扱う代わりに、DBコネクションを暗黙の値として定義し、DBコネクションを利用するメソッドは暗黙の引数としてDBコネクションを受け取るようにすることで、グローバルに依存することを回避しつつ何度も引数にDBコネクションを指定する面倒さも回避できます。
 
 シンプルなのでありがたみが余りないですが、
 
@@ -312,7 +314,7 @@ $ activator run
 [error] (compile:compile) Compilation failed
 ```
 
-使う場合はパッケージ+クラス名で書くか、インポートします。インポートは`import`で指定します。インポート時に`_`を使うことでパッケージ内のすべてをインポートすることもできます。
+使う場合は`example.hoge.Hoge`というようにパッケージ+クラス名で書くか、インポートします。インポートは`import example.hoge.Hoge`というように書きます。インポート時に`import example.hoge._`書くことで`example.hoge`パッケージ内のすべてをインポートすることもできます。
 
 ```scala
 import example.hoge._
@@ -519,14 +521,14 @@ def binarySearch[A](list: List[A], a: A): Boolean = list match {
 REPLで読み込んでみます。
 
 ```scala
-scala> :lo src/binarySearch.scala
-Loading src/binarySearch.scala...
+scala> :lo binarySearch.scala
+Loading binarySearch.scala...
 <console>:16: error: value < is not a member of type parameter A
            else if (a < m) binarySearch(list.take(p), a)
                                  ^
 ```
 
-比較演算子が存在しないよというコンパイルエラーになりました。最もな指摘ですね。型パラメータAを導入し、引数`list`の型をList[A]型にしたため、`list`の要素であるA型のオブジェクトに比較演算子が定義されていない可能性があります。型パラメータAに指定できる型が、Orderedトレイトをミックスインした型に限定できればコンパイルできるはずです。
+比較演算子が存在しないよというコンパイルエラーになりました。もっともな指摘ですね。型パラメータAを導入し、引数`list`の型をList[A]型にしたため、`list`の要素であるA型のオブジェクトに比較演算子が定義されていない可能性があります。型パラメータAに指定できる型が、Orderedトレイトをミックスインした型に限定できればコンパイルできるはずです。
 
 このように型パラメータに指定できる型を限定する方法が型パラメータの境界です。ある型のサブクラスに限定したい場合は、`<:`を使います。これを上限境界と呼びます。
 
