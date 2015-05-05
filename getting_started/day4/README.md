@@ -765,12 +765,10 @@ Twitter社によるベストプラクティスが書かれたEffective Scalaも�
   sealed abstract class Tree {
     def insert(x: Int): Tree
     def contains(x: Int): Boolean
-    def remove(x: Int): Tree
   }
   case class Empty() extends Tree {
     override def insert(x: Int): Tree = Node(x, Empty(), Empty())
     override def contains(x: Int): Boolean = false
-    override def remove(x: Int): Tree = Empty()
   }
   case class Node(a: Int, left: Tree, right: Tree) extends Tree {
     override def insert(x: Int): Tree =
@@ -781,7 +779,6 @@ Twitter社によるベストプラクティスが書かれたEffective Scalaも�
       if (x == a)      true
       else if (x <= a) left.contains(x)
       else             right.contains(x)
-    }
   }
   ```
 
